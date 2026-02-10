@@ -24,13 +24,24 @@ class TravelOrderController extends Controller
             'destination' => 'required|string|max:255',
             'departure_date' => 'required|date',
             'return_date' => 'required|date|after_or_equal:departure_date',
+        ], [
+            'destination.required' => 'O destino é obrigatório.',
+            'destination.max' => 'O destino não pode ter mais de 255 caracteres.',
+            'departure_date.required' => 'A data de partida é obrigatória.',
+            'departure_date.date' => 'A data de partida deve ser uma data válida.',
+            'return_date.required' => 'A data de retorno é obrigatória.',
+            'return_date.date' => 'A data de retorno deve ser uma data válida.',
+            'return_date.after_or_equal' => 'A data de retorno deve ser igual ou posterior à data de partida.',
         ]);
 
         $result = $this->travelOrderService->create($requestedData);
 
         return response()->json([
-            'travel_order' => $result,
-            'message' => 'Travel order created successfully',
+            'success' => true,
+            'message' => 'Solicitação de viagem criada com sucesso!',
+            'data' => [
+                'travel_order' => $result,
+            ]
         ], 201);
 
     }
@@ -44,8 +55,11 @@ class TravelOrderController extends Controller
         $result = $this->travelOrderService->get($id);
 
         return response()->json([
-            'travel_orders' => $result,
-            'message' => 'Travel orders retrieved successfully',
+            'success' => true,
+            'message' => 'Solicitação de viagem recuperada com sucesso.',
+            'data' => [
+                'travel_order' => $result,
+            ]
         ], 200);
     }
 
@@ -57,8 +71,11 @@ class TravelOrderController extends Controller
         $result = $this->travelOrderService->getAll();
 
         return response()->json([
-            'travel_orders' => $result,
-            'message' => 'Travel orders retrieved successfully',
+            'success' => true,
+            'message' => 'Solicitações de viagem recuperadas com sucesso.',
+            'data' => [
+                'travel_orders' => $result,
+            ]
         ], 200);
     }
 
@@ -71,8 +88,11 @@ class TravelOrderController extends Controller
         $result = $this->travelOrderService->getByUserId($userId);
 
         return response()->json([
-            'travel_orders' => $result,
-            'message' => 'Travel orders retrieved successfully',
+            'success' => true,
+            'message' => 'Solicitações de viagem do usuário recuperadas com sucesso.',
+            'data' => [
+                'travel_orders' => $result,
+            ]
         ], 200);
     }
 
@@ -86,13 +106,24 @@ class TravelOrderController extends Controller
             'destination' => 'sometimes|required|string|max:255',
             'departure_date' => 'sometimes|required|date',
             'return_date' => 'sometimes|required|date|after_or_equal:departure_date',
+        ], [
+            'destination.required' => 'O destino é obrigatório.',
+            'destination.max' => 'O destino não pode ter mais de 255 caracteres.',
+            'departure_date.required' => 'A data de partida é obrigatória.',
+            'departure_date.date' => 'A data de partida deve ser uma data válida.',
+            'return_date.required' => 'A data de retorno é obrigatória.',
+            'return_date.date' => 'A data de retorno deve ser uma data válida.',
+            'return_date.after_or_equal' => 'A data de retorno deve ser igual ou posterior à data de partida.',
         ]);
 
         $result = $this->travelOrderService->update($id, $requestedData);
 
         return response()->json([
-            'travel_order' => $result,
-            'message' => 'Travel order updated successfully',
+            'success' => true,
+            'message' => 'Solicitação de viagem atualizada com sucesso!',
+            'data' => [
+                'travel_order' => $result,
+            ]
         ], 200);
     }
 
@@ -105,8 +136,11 @@ class TravelOrderController extends Controller
         $result = $this->travelOrderService->delete($id);
 
         return response()->json([
-            'travel_order' => $result,
-            'message' => 'Travel order cancelled successfully',
+            'success' => true,
+            'message' => 'Solicitação de viagem excluída com sucesso!',
+            'data' => [
+                'travel_order' => $result,
+            ]
         ], 200);
     }
 
@@ -115,13 +149,21 @@ class TravelOrderController extends Controller
         $id = $request->route('id');
         $requestedData = $request->validate([
             'status' => 'required|string|in:approved,rejected',
+        ], [
+            'status.required' => 'O status é obrigatório.',
+            'status.in' => 'O status deve ser "approved" (aprovado) ou "rejected" (rejeitado).',
         ]);
 
         $result = $this->travelOrderService->updateStatus($id, $requestedData['status']);
 
+        $statusMessage = $requestedData['status'] === 'approved' ? 'aprovada' : 'rejeitada';
+
         return response()->json([
-            'travel_order' => $result,
-            'message' => 'Travel order status updated successfully',
+            'success' => true,
+            'message' => "Solicitação de viagem {$statusMessage} com sucesso!",
+            'data' => [
+                'travel_order' => $result,
+            ]
         ], 200);
     }
 
@@ -133,11 +175,12 @@ class TravelOrderController extends Controller
         $id = $request->route('id');
         $result = $this->travelOrderService->cancel($id);
 
-        $message = $result->status === 'cancelled' ? 'Travel order cancelled successfully' : 'Travel order could not be cancelled';
-
         return response()->json([
-            'travel_order' => $result,
-            'message' => $message,
+            'success' => true,
+            'message' => 'Solicitação de viagem cancelada com sucesso!',
+            'data' => [
+                'travel_order' => $result,
+            ]
         ], 200);
     }
 }

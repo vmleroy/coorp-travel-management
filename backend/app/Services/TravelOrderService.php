@@ -39,7 +39,7 @@ class TravelOrderService
         $travelOrder = TravelOrder::findOrFail($id);
 
         if ($travelOrder->status !== 'pending') {
-            return $travelOrder;
+            throw new \Exception('Não é possível editar uma solicitação que não está pendente. Status atual: ' . $travelOrder->status);
         }
 
         $travelOrder->update($data);
@@ -77,7 +77,7 @@ class TravelOrderService
 
         // Only allow cancellation if status is pending (not yet approved)
         if ($travelOrder->status !== 'pending') {
-            return $travelOrder;
+            throw new \Exception('Não é possível cancelar uma solicitação que não está pendente. Status atual: ' . $travelOrder->status);
         }
 
         $travelOrder->status = 'cancelled';

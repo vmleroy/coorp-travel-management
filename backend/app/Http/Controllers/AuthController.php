@@ -23,14 +23,28 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'nullable|string|in:admin,user',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome não pode ter mais de 255 caracteres.',
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'O email deve ser um endereço válido.',
+            'email.unique' => 'Este email já está cadastrado.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'password.confirmed' => 'A confirmação de senha não corresponde.',
+            'role.in' => 'O papel deve ser "admin" ou "user".',
         ]);
 
         $result = $this->authService->register($validated);
 
         return response()->json([
-            'user' => $result['user'],
-            'token' => $result['token'],
-            'message' => 'User registered successfully',
+            'success' => true,
+            'message' => 'Usuário cadastrado com sucesso!',
+            'data' => [
+                'user' => $result['user'],
+                'token' => $result['token'],
+            ]
         ], 201);
     }
 
@@ -42,14 +56,21 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
+        ], [
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'O email deve ser um endereço válido.',
+            'password.required' => 'A senha é obrigatória.',
         ]);
 
         $result = $this->authService->login($validated);
 
         return response()->json([
-            'user' => $result['user'],
-            'token' => $result['token'],
-            'message' => 'Login successful',
+            'success' => true,
+            'message' => 'Login realizado com sucesso!',
+            'data' => [
+                'user' => $result['user'],
+                'token' => $result['token'],
+            ]
         ], 200);
     }
 
@@ -61,7 +82,11 @@ class AuthController extends Controller
         $user = $this->authService->getCurrentUser($request->user());
 
         return response()->json([
-            'user' => $user,
+            'success' => true,
+            'message' => 'Dados do usuário recuperados com sucesso.',
+            'data' => [
+                'user' => $user,
+            ]
         ], 200);
     }
 
@@ -73,7 +98,8 @@ class AuthController extends Controller
         $this->authService->logout($request->user());
 
         return response()->json([
-            'message' => 'Logged out successfully',
+            'success' => true,
+            'message' => 'Logout realizado com sucesso!',
         ], 200);
     }
 
@@ -85,7 +111,8 @@ class AuthController extends Controller
         $this->authService->logoutAll($request->user());
 
         return response()->json([
-            'message' => 'Logged out from all devices',
+            'success' => true,
+            'message' => 'Logout realizado em todos os dispositivos com sucesso!',
         ], 200);
     }
 
@@ -97,8 +124,11 @@ class AuthController extends Controller
         $token = $this->authService->refreshToken($request->user());
 
         return response()->json([
-            'token' => $token,
-            'message' => 'Token refreshed successfully',
+            'success' => true,
+            'message' => 'Token renovado com sucesso!',
+            'data' => [
+                'token' => $token,
+            ]
         ], 200);
     }
 
@@ -112,13 +142,25 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'nullable|string|in:admin,user',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome não pode ter mais de 255 caracteres.',
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'O email deve ser um endereço válido.',
+            'email.unique' => 'Este email já está cadastrado.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'role.in' => 'O papel deve ser "admin" ou "user".',
         ]);
 
         $user = $this->authService->createUser($validated);
 
         return response()->json([
-            'user' => $user,
-            'message' => 'User created successfully',
+            'success' => true,
+            'message' => 'Usuário criado com sucesso!',
+            'data' => [
+                'user' => $user,
+            ]
         ], 201);
     }
 
@@ -147,16 +189,19 @@ class AuthController extends Controller
         $result = $this->authService->getAllUsers($filters, $perPage);
 
         return response()->json([
-            'users' => $result['data'],
-            'pagination' => [
-                'current_page' => $result['current_page'],
-                'per_page' => $result['per_page'],
-                'total' => $result['total'],
-                'last_page' => $result['last_page'],
-                'from' => $result['from'],
-                'to' => $result['to'],
-            ],
-            'message' => 'Users retrieved successfully',
+            'success' => true,
+            'message' => 'Usuários recuperados com sucesso.',
+            'data' => [
+                'users' => $result['data'],
+                'pagination' => [
+                    'current_page' => $result['current_page'],
+                    'per_page' => $result['per_page'],
+                    'total' => $result['total'],
+                    'last_page' => $result['last_page'],
+                    'from' => $result['from'],
+                    'to' => $result['to'],
+                ],
+            ]
         ], 200);
     }
 
@@ -167,8 +212,11 @@ class AuthController extends Controller
         $id = $request->route('id');
         $user = $this->authService->getUserById($id);
         return response()->json([
-            'user' => $user,
-            'message' => 'User retrieved successfully',
+            'success' => true,
+            'message' => 'Usuário recuperado com sucesso.',
+            'data' => [
+                'user' => $user,
+            ]
         ], 200);
     }
 
@@ -183,13 +231,25 @@ class AuthController extends Controller
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
             'password' => 'sometimes|required|string|min:8',
             'role' => 'sometimes|required|string|in:admin,user',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome não pode ter mais de 255 caracteres.',
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'O email deve ser um endereço válido.',
+            'email.unique' => 'Este email já está cadastrado.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'role.in' => 'O papel deve ser "admin" ou "user".',
         ]);
 
         $user = $this->authService->updateUser($id, $validated);
 
         return response()->json([
-            'user' => $user,
-            'message' => 'User updated successfully',
+            'success' => true,
+            'message' => 'Usuário atualizado com sucesso!',
+            'data' => [
+                'user' => $user,
+            ]
         ], 200);
     }
 
@@ -200,13 +260,22 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'password' => 'sometimes|required|string|min:8|confirmed',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome não pode ter mais de 255 caracteres.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.min' => 'A senha deve ter no mínimo 8 caracteres.',
+            'password.confirmed' => 'A confirmação de senha não corresponde.',
         ]);
 
         $user = $this->authService->updateMe($request->user()->id, $validated);
 
         return response()->json([
-            'user' => $user,
-            'message' => 'Profile updated successfully',
+            'success' => true,
+            'message' => 'Perfil atualizado com sucesso!',
+            'data' => [
+                'user' => $user,
+            ]
         ], 200);
     }
 }

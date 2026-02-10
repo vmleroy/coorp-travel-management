@@ -20,7 +20,9 @@ class CheckUserRole
         // Check if user is authenticated
         if (!$request->user()) {
             return response()->json([
-                'message' => 'Unauthenticated.',
+                'success' => false,
+                'message' => 'Autenticação necessária. Por favor, faça login para acessar este recurso.',
+                'error' => 'unauthenticated'
             ], 401);
         }
 
@@ -41,7 +43,10 @@ class CheckUserRole
         // Check if user has one of the allowed roles
         if (!in_array($request->user()->role, $allowedRoles, true)) {
             return response()->json([
-                'message' => 'Forbidden. You do not have the required role.',
+                'success' => false,
+                'message' => 'Acesso negado. Você não possui permissão para executar esta ação.',
+                'error' => 'forbidden',
+                'required_role' => implode(', ', $roles)
             ], 403);
         }
 
