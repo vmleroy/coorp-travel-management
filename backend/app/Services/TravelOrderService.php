@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TravelOrder;
+use Illuminate\Database\Eloquent\Builder;
 
 class TravelOrderService
 {
@@ -30,8 +31,21 @@ class TravelOrderService
     public function delete(int $id)
     {
         $travelOrder = TravelOrder::findOrFail($id);
-        $travelOrder->update(['status' => 'cancelled']);
         $travelOrder->delete();
+
+        return $travelOrder;
+    }
+
+    public function cancel(int $id)
+    {
+        $travelOrder = TravelOrder::findOrFail($id);
+
+        if ($travelOrder->status === 'cancelled' || $travelOrder->status !== 'approved') {
+            return $travelOrder;
+        }
+
+        $travelOrder->status = 'cancelled';
+        $travelOrder->save();
 
         return $travelOrder;
     }
@@ -43,17 +57,58 @@ class TravelOrderService
         return $travelOrder;
     }
 
-    public function getAll()
+    public function getAll(array $filters = [])
     {
-        $travelOrders = TravelOrder::all();
-
-        return $travelOrders;
+        $query = TravelOrder::query();
+        $query = $this->applyFilters($query, $filters);
+        return $this->applyPagination($query, $filters);
     }
 
-    public function getByUserId(int $userId)
+    public function getByUserId(int $userId, array $filters = [])
     {
-        $travelOrder = TravelOrder::where('user_id', $userId)->get();
+        $query = TravelOrder::query()->where('user_id', $userId);
+        $query = $this->applyFilters($query, $filters);
+        return $this->applyPagination($query, $filters);
+    }
 
-        return $travelOrder;
+    private function applyFilters(Builder $query, array $filters)
+    {
+        // Filter by status
+        if (!empty($filters['status'])) {
+            $status = $filters['status'];
+            if (is_array($status)) {
+                $query->whereIn('status', $status);
+            }
+
+            if (!is_array($status)) {
+                $query->where('status', $status);
+            }
+        }
+
+        if (!empty($filters['return_date_from'])) {
+            $query->whereDate('return_date', '>=', $filters['return_date_from']);
+        }
+
+        // Sort
+        if (!empty($filters['sort_by'])) {
+            $sortBy = $filters['sort_by'];
+            $sortOrder = $filters['sort_order'] ?? 'asc';
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        return $query;
+    }
+
+    private function applyPagination(Builder $query, array $filters)
+    {
+        if (!empty($filters['per_page'])) {
+            $perPage = $filters['per_page'];
+            $page = $filters['page'] ?? 1;
+            return $query->paginate($perPage, ['*'], 'page', $page);
+        }
+
+        return $query->get();
     }
 }
