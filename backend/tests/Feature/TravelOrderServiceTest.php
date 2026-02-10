@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\TravelOrder;
 use App\Models\User;
+use App\Notifications\OrderStatusUpdated;
 use App\Services\TravelOrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class TravelOrderServiceTest extends TestCase
@@ -514,5 +516,118 @@ class TravelOrderServiceTest extends TestCase
         $this->assertEquals('Paris', $orders[0]->destination);
         $this->assertEquals('pending', $orders[0]->status);
     }
+
+    /**
+     * Test notification is sent when status is updated to approved
+     */
+    public function test_notification_sent_when_status_updated_to_approved(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $travelOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+        ]);
+
+        $this->travelOrderService->updateStatus($travelOrder->id, 'approved');
+
+        Notification::assertSentTo(
+            [$user],
+            OrderStatusUpdated::class,
+            function ($notification, $channels) use ($travelOrder) {
+                return $notification->order->id === $travelOrder->id
+                    && $notification->previousStatus === 'pending';
+            }
+        );
+    }
+
+    /**
+     * Test notification is sent when status is updated to rejected
+     */
+    public function test_notification_sent_when_status_updated_to_rejected(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $travelOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+        ]);
+
+        $this->travelOrderService->updateStatus($travelOrder->id, 'rejected');
+
+        Notification::assertSentTo(
+            [$user],
+            OrderStatusUpdated::class,
+            function ($notification, $channels) use ($travelOrder) {
+                return $notification->order->id === $travelOrder->id
+                    && $notification->previousStatus === 'pending';
+            }
+        );
+    }
+
+    /**
+     * Test notification is NOT sent when status doesn't change
+     */
+    public function test_notification_not_sent_when_status_unchanged(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $travelOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+        ]);
+
+        $this->travelOrderService->updateStatus($travelOrder->id, 'approved');
+
+        Notification::assertNothingSent();
+    }
+
+    /**
+     * Test notification is sent when order is cancelled
+     */
+    public function test_notification_sent_when_order_cancelled(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $travelOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+        ]);
+
+        $this->travelOrderService->cancel($travelOrder->id);
+
+        Notification::assertSentTo(
+            [$user],
+            OrderStatusUpdated::class,
+            function ($notification, $channels) use ($travelOrder) {
+                return $notification->order->id === $travelOrder->id
+                    && $notification->previousStatus === 'pending'
+                    && $notification->order->status === 'cancelled';
+            }
+        );
+    }
+
+    /**
+     * Test notification is NOT sent when cancel fails (order already approved)
+     */
+    public function test_notification_not_sent_when_cancel_fails(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $travelOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+        ]);
+
+        $this->travelOrderService->cancel($travelOrder->id);
+
+        Notification::assertNothingSent();
+    }
 }
+
 

@@ -2,7 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\OrderStatusChanged;
+use App\Events\TravelOrderCreated;
 use App\Models\TravelOrder;
+use App\Models\User;
+use App\Notifications\NewTravelOrderForAdmin;
+use App\Notifications\OrderStatusUpdated;
 use Illuminate\Database\Eloquent\Builder;
 
 class TravelOrderService
@@ -16,6 +21,15 @@ class TravelOrderService
             'return_date' => $data['return_date'],
             'status' => 'pending',
         ]);
+
+        // Dispatch broadcast event for admins
+        TravelOrderCreated::dispatch($travelOrder);
+
+        // Notify all admin users
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewTravelOrderForAdmin($travelOrder));
+        }
 
         return $travelOrder;
     }
@@ -36,8 +50,22 @@ class TravelOrderService
     public function updateStatus(int $id, string $status)
     {
         $travelOrder = TravelOrder::findOrFail($id);
+        $previousStatus = $travelOrder->status;
+
+        // Only send notification if status actually changed and is approved or rejected
+        $shouldNotify = $previousStatus !== $status &&
+                        in_array($status, ['approved', 'rejected']);
+
         $travelOrder->status = $status;
         $travelOrder->save();
+
+        if ($shouldNotify) {
+            // Dispatch broadcast event
+            OrderStatusChanged::dispatch($travelOrder, $previousStatus);
+
+            // Send notification (database, mail, broadcast)
+            $travelOrder->user->notify(new OrderStatusUpdated($travelOrder, $previousStatus));
+        }
 
         return $travelOrder;
     }
@@ -45,6 +73,7 @@ class TravelOrderService
     public function cancel(int $id)
     {
         $travelOrder = TravelOrder::findOrFail($id);
+        $previousStatus = $travelOrder->status;
 
         // Only allow cancellation if status is pending (not yet approved)
         if ($travelOrder->status !== 'pending') {
@@ -53,6 +82,12 @@ class TravelOrderService
 
         $travelOrder->status = 'cancelled';
         $travelOrder->save();
+
+        // Dispatch broadcast event
+        OrderStatusChanged::dispatch($travelOrder, $previousStatus);
+
+        // Send notification about cancellation (database, mail, broadcast)
+        $travelOrder->user->notify(new OrderStatusUpdated($travelOrder, $previousStatus));
 
         return $travelOrder;
     }

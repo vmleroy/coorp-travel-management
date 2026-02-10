@@ -1,12 +1,17 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
 
 // Public authentication routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+
+// Broadcasting authentication
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,5 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/{id}/change-status', [\App\Http\Controllers\TravelOrderController::class, 'updateStatus']);
             Route::put('/{id}/cancel', [\App\Http\Controllers\TravelOrderController::class, 'cancel']);
         });
+    });
+
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread', [NotificationController::class, 'unread']);
+        Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 });
