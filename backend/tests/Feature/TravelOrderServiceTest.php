@@ -307,4 +307,212 @@ class TravelOrderServiceTest extends TestCase
 
         $this->assertCount(0, $this->travelOrderService->getByUserId($user->id));
     }
+
+    /**
+     * Test travel order includes user relationship
+     */
+    public function test_travel_order_includes_user_relationship(): void
+    {
+        $user = User::factory()->create(['name' => 'John Doe']);
+        $travelOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'destination' => 'Tokyo',
+        ]);
+
+        $retrieved = $this->travelOrderService->get($travelOrder->id);
+
+        $this->assertNotNull($retrieved->user);
+        $this->assertEquals('John Doe', $retrieved->user->name);
+        $this->assertEquals($user->id, $retrieved->user->id);
+    }
+
+    /**
+     * Test travel order list includes user names
+     */
+    public function test_travel_order_list_includes_user_names(): void
+    {
+        $user1 = User::factory()->create(['name' => 'Alice']);
+        $user2 = User::factory()->create(['name' => 'Bob']);
+
+        TravelOrder::factory()->create(['user_id' => $user1->id]);
+        TravelOrder::factory()->create(['user_id' => $user2->id]);
+
+        $orders = $this->travelOrderService->getAll();
+
+        $this->assertCount(2, $orders);
+        $this->assertNotNull($orders[0]->user);
+        $this->assertNotNull($orders[1]->user);
+
+        $names = $orders->pluck('user.name')->toArray();
+        $this->assertContains('Alice', $names);
+        $this->assertContains('Bob', $names);
+    }
+
+    /**
+     * Test filtering travel orders by destination
+     */
+    public function test_can_filter_travel_orders_by_destination(): void
+    {
+        $user = User::factory()->create();
+        TravelOrder::factory()->create(['user_id' => $user->id, 'destination' => 'Paris, France']);
+        TravelOrder::factory()->create(['user_id' => $user->id, 'destination' => 'Tokyo, Japan']);
+        TravelOrder::factory()->create(['user_id' => $user->id, 'destination' => 'New York, USA']);
+
+        $filters = ['destination' => 'Paris'];
+        $orders = $this->travelOrderService->getAll($filters);
+
+        $this->assertCount(1, $orders);
+        $this->assertStringContainsString('Paris', $orders[0]->destination);
+    }
+
+    /**
+     * Test filtering travel orders by departure date range
+     */
+    public function test_can_filter_travel_orders_by_departure_date(): void
+    {
+        $user = User::factory()->create();
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'departure_date' => '2026-03-01',
+        ]);
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'departure_date' => '2026-06-15',
+        ]);
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'departure_date' => '2026-09-20',
+        ]);
+
+        $filters = [
+            'departure_date_from' => '2026-05-01',
+            'departure_date_to' => '2026-08-31',
+        ];
+        $orders = $this->travelOrderService->getAll($filters);
+
+        $this->assertCount(1, $orders);
+        $this->assertEquals('2026-06-15', $orders[0]->departure_date->format('Y-m-d'));
+    }
+
+    /**
+     * Test filtering travel orders by return date range
+     */
+    public function test_can_filter_travel_orders_by_return_date(): void
+    {
+        $user = User::factory()->create();
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'return_date' => '2026-03-10',
+        ]);
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'return_date' => '2026-06-20',
+        ]);
+
+        $filters = ['return_date_from' => '2026-06-01'];
+        $orders = $this->travelOrderService->getAll($filters);
+
+        $this->assertCount(1, $orders);
+        $this->assertEquals('2026-06-20', $orders[0]->return_date->format('Y-m-d'));
+    }
+
+    /**
+     * Test filtering travel orders by creation date
+     */
+    public function test_can_filter_travel_orders_by_creation_date(): void
+    {
+        $user = User::factory()->create();
+
+        // Create order and manually set created_at
+        $order1 = TravelOrder::factory()->create(['user_id' => $user->id]);
+        $order1->created_at = '2026-01-01';
+        $order1->save();
+
+        $order2 = TravelOrder::factory()->create(['user_id' => $user->id]);
+        $order2->created_at = '2026-02-15';
+        $order2->save();
+
+        $filters = ['created_from' => '2026-02-01'];
+        $orders = $this->travelOrderService->getAll($filters);
+
+        $this->assertCount(1, $orders);
+    }
+
+    /**
+     * Test cancel only works for pending orders
+     */
+    public function test_cancel_only_works_for_pending_orders(): void
+    {
+        $user = User::factory()->create();
+
+        // Test pending order can be cancelled
+        $pendingOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'pending',
+        ]);
+
+        $cancelled = $this->travelOrderService->cancel($pendingOrder->id);
+        $this->assertEquals('cancelled', $cancelled->status);
+
+        // Test approved order cannot be cancelled
+        $approvedOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+        ]);
+
+        $notCancelled = $this->travelOrderService->cancel($approvedOrder->id);
+        $this->assertEquals('approved', $notCancelled->status);
+
+        // Test rejected order cannot be cancelled
+        $rejectedOrder = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'rejected',
+        ]);
+
+        $notCancelled2 = $this->travelOrderService->cancel($rejectedOrder->id);
+        $this->assertEquals('rejected', $notCancelled2->status);
+    }
+
+    /**
+     * Test combining multiple filters
+     */
+    public function test_can_combine_multiple_filters(): void
+    {
+        $user = User::factory()->create();
+
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'destination' => 'Paris',
+            'status' => 'pending',
+            'departure_date' => '2026-06-01',
+        ]);
+
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'destination' => 'Paris',
+            'status' => 'approved',
+            'departure_date' => '2026-06-15',
+        ]);
+
+        TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'destination' => 'Tokyo',
+            'status' => 'pending',
+            'departure_date' => '2026-06-10',
+        ]);
+
+        $filters = [
+            'destination' => 'Paris',
+            'status' => 'pending',
+            'departure_date_from' => '2026-06-01',
+            'departure_date_to' => '2026-06-10',
+        ];
+
+        $orders = $this->travelOrderService->getAll($filters);
+
+        $this->assertCount(1, $orders);
+        $this->assertEquals('Paris', $orders[0]->destination);
+        $this->assertEquals('pending', $orders[0]->status);
+    }
 }
+

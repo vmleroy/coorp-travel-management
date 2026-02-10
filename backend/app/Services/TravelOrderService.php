@@ -46,7 +46,8 @@ class TravelOrderService
     {
         $travelOrder = TravelOrder::findOrFail($id);
 
-        if ($travelOrder->status === 'cancelled' || $travelOrder->status !== 'approved') {
+        // Only allow cancellation if status is pending (not yet approved)
+        if ($travelOrder->status !== 'pending') {
             return $travelOrder;
         }
 
@@ -99,8 +100,36 @@ class TravelOrderService
             }
         }
 
+        // Filter by destination
+        if (!empty($filters['destination'])) {
+            $query->where('destination', 'like', '%' . $filters['destination'] . '%');
+        }
+
+        // Filter by departure date range
+        if (!empty($filters['departure_date_from'])) {
+            $query->whereDate('departure_date', '>=', $filters['departure_date_from']);
+        }
+
+        if (!empty($filters['departure_date_to'])) {
+            $query->whereDate('departure_date', '<=', $filters['departure_date_to']);
+        }
+
+        // Filter by return date range
         if (!empty($filters['return_date_from'])) {
             $query->whereDate('return_date', '>=', $filters['return_date_from']);
+        }
+
+        if (!empty($filters['return_date_to'])) {
+            $query->whereDate('return_date', '<=', $filters['return_date_to']);
+        }
+
+        // Filter by created_at date range
+        if (!empty($filters['created_from'])) {
+            $query->whereDate('created_at', '>=', $filters['created_from']);
+        }
+
+        if (!empty($filters['created_to'])) {
+            $query->whereDate('created_at', '<=', $filters['created_to']);
         }
 
         // Sort

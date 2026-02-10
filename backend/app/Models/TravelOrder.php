@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TravelOrder extends Model
@@ -20,7 +21,19 @@ class TravelOrder extends Model
         'status',
     ];
 
-    protected $dates = [
-        'deleted_at',
+    protected $casts = [
+        'departure_date' => 'date',
+        'return_date' => 'date',
+        'deleted_at' => 'datetime',
     ];
+
+    protected $with = ['user'];
+
+    /**
+     * Get the user that owns the travel order.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }
