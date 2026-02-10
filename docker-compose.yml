@@ -1,0 +1,74 @@
+services:
+  # Backend (Laravel)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: docker/backend/Dockerfile
+    container_name: coorp-travel-backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - /var/www/vendor
+      - /var/www/node_modules
+    environment:
+      DB_CONNECTION: sqlite
+      CACHE_DRIVER: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: reverb
+      REVERB_HOST: websocket
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+    ports:
+      - "8000:8000"
+    networks:
+      - coorp-travel
+
+  # WebSocket (Reverb)
+  websocket:
+    build:
+      context: ./backend
+      dockerfile: docker/websocket/Dockerfile
+    container_name: coorp-travel-websocket
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - /var/www/vendor
+    environment:
+      DB_CONNECTION: sqlite
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      REVERB_HOST: localhost
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    networks:
+      - coorp-travel
+
+  # Frontend (Vue.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: docker/frontend/Dockerfile
+    container_name: coorp-travel-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_HOST: localhost
+      VITE_WS_PORT: 8080
+    networks:
+      - coorp-travel
+
+networks:
+  coorp-travel:
+    driver: bridge
