@@ -85,7 +85,7 @@ class TravelOrderController extends Controller
         $requestedData = $request->validate([
             'destination' => 'sometimes|required|string|max:255',
             'departure_date' => 'sometimes|required|date',
-            'return_date' => 'sometimes|required|date|after_or_equal:departure_date','status' => 'sometimes|required|in:approved,rejected',
+            'return_date' => 'sometimes|required|date|after_or_equal:departure_date',
         ]);
 
         $result = $this->travelOrderService->update($id, $requestedData);
@@ -107,6 +107,21 @@ class TravelOrderController extends Controller
         return response()->json([
             'travel_order' => $result,
             'message' => 'Travel order cancelled successfully',
+        ], 200);
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $id = $request->route('id');
+        $requestedData = $request->validate([
+            'status' => 'required|string|in:approved,rejected',
+        ]);
+
+        $result = $this->travelOrderService->updateStatus($id, $requestedData['status']);
+
+        return response()->json([
+            'travel_order' => $result,
+            'message' => 'Travel order status updated successfully',
         ], 200);
     }
 

@@ -16,9 +16,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/me', [AuthController::class, 'updateMe']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
+
+        Route::middleware('role:admin')->group(function () {
+            Route::post('/create-user', [AuthController::class, 'createUser']);
+            Route::get('/users', [AuthController::class, 'getAllUsers']);
+            Route::get('/users/{id}', [AuthController::class, 'getUserById']);
+            Route::put('/users/{id}', [AuthController::class, 'updateUser']);
+        });
     });
 
     Route::prefix('travel-orders')->group(function () {
@@ -28,5 +36,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'update']);
         Route::delete('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'destroy']);
         Route::get('/user/{user_id}', [\App\Http\Controllers\TravelOrderController::class, 'showAllByUser']);
+
+        Route::middleware('role:admin')->group(function () {
+            Route::put('/{id}/change-status', [\App\Http\Controllers\TravelOrderController::class, 'updateStatus']);
+            Route::put('/{id}/cancel', [\App\Http\Controllers\TravelOrderController::class, 'cancel']);
+        });
     });
 });

@@ -101,4 +101,112 @@ class AuthController extends Controller
             'message' => 'Token refreshed successfully',
         ], 200);
     }
+
+    /**
+     * Create a new user (protected route - admin only)
+     */
+    public function createUser(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role' => 'nullable|string|in:admin,user',
+        ]);
+
+        $user = $this->authService->createUser($validated);
+
+        return response()->json([
+            'user' => $user,
+            'message' => 'User created successfully',
+        ], 201);
+    }
+
+    /**
+     * Get all users (protected route - admin only)
+     */
+    public function getAllUsers(Request $request)
+    {
+        $validated = $request->validate([
+            'role' => 'nullable|string|in:admin,user',
+            'email' => 'nullable|string',
+            'name' => 'nullable|string',
+            'search' => 'nullable|string',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $filters = array_filter([
+            'role' => $validated['role'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'name' => $validated['name'] ?? null,
+            'search' => $validated['search'] ?? null,
+        ]);
+
+        $perPage = $validated['per_page'] ?? 15;
+
+        $result = $this->authService->getAllUsers($filters, $perPage);
+
+        return response()->json([
+            'users' => $result['data'],
+            'pagination' => [
+                'current_page' => $result['current_page'],
+                'per_page' => $result['per_page'],
+                'total' => $result['total'],
+                'last_page' => $result['last_page'],
+                'from' => $result['from'],
+                'to' => $result['to'],
+            ],
+            'message' => 'Users retrieved successfully',
+        ], 200);
+    }
+
+    /**
+     * Get a specific user by ID (protected route - admin only)
+     */
+    public function getUserById(Request $request) {
+        $id = $request->route('id');
+        $user = $this->authService->getUserById($id);
+        return response()->json([
+            'user' => $user,
+            'message' => 'User retrieved successfully',
+        ], 200);
+    }
+
+    /**
+     * Update a user (protected route - admin only)
+     */
+    public function updateUser(Request $request)
+    {
+        $id = $request->route('id');
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
+            'password' => 'sometimes|required|string|min:8',
+            'role' => 'sometimes|required|string|in:admin,user',
+        ]);
+
+        $user = $this->authService->updateUser($id, $validated);
+
+        return response()->json([
+            'user' => $user,
+            'message' => 'User updated successfully',
+        ], 200);
+    }
+
+    /**
+     * Update current user (protected route - user)
+     */
+    public function updateMe(Request $request) {
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'password' => 'sometimes|required|string|min:8|confirmed',
+        ]);
+
+        $user = $this->authService->updateMe($request->user()->id, $validated);
+
+        return response()->json([
+            'user' => $user,
+            'message' => 'Profile updated successfully',
+        ], 200);
+    }
 }

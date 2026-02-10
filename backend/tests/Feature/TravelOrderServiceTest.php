@@ -72,21 +72,19 @@ class TravelOrderServiceTest extends TestCase
         $travelOrder = TravelOrder::factory()->create([
             'user_id' => $user->id,
             'destination' => 'New York',
+            'status' => 'pending', // Only pending orders can be updated
         ]);
 
         $updatedData = [
             'destination' => 'Los Angeles',
-            'status' => 'approved',
         ];
 
         $updated = $this->travelOrderService->update($travelOrder->id, $updatedData);
 
         $this->assertEquals('Los Angeles', $updated->destination);
-        $this->assertEquals('approved', $updated->status);
         $this->assertDatabaseHas('travel_order', [
             'id' => $travelOrder->id,
             'destination' => 'Los Angeles',
-            'status' => 'approved',
         ]);
     }
 
@@ -102,9 +100,9 @@ class TravelOrderServiceTest extends TestCase
 
         $deleted = $this->travelOrderService->delete($travelOrder->id);
 
-        $this->assertEquals('cancelled', $deleted->status);
         // Verify soft delete - record should not be found in regular query
         $this->assertNull(TravelOrder::find($travelOrder->id));
+        $this->assertSoftDeleted('travel_order', ['id' => $travelOrder->id]);
     }
 
     /**
@@ -199,16 +197,16 @@ class TravelOrderServiceTest extends TestCase
             'status' => 'pending',
         ]);
 
-        // Transition: pending -> approved
-        $approved = $this->travelOrderService->update($travelOrder->id, ['status' => 'approved']);
+        // Transition: pending -> approved (using updateStatus)
+        $approved = $this->travelOrderService->updateStatus($travelOrder->id, 'approved');
         $this->assertEquals('approved', $approved->status);
 
         // Transition: approved -> rejected
-        $rejected = $this->travelOrderService->update($approved->id, ['status' => 'rejected']);
+        $rejected = $this->travelOrderService->updateStatus($approved->id, 'rejected');
         $this->assertEquals('rejected', $rejected->status);
 
         // Transition: rejected -> cancelled
-        $cancelled = $this->travelOrderService->update($rejected->id, ['status' => 'cancelled']);
+        $cancelled = $this->travelOrderService->updateStatus($rejected->id, 'cancelled');
         $this->assertEquals('cancelled', $cancelled->status);
     }
 

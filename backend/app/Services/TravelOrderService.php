@@ -23,15 +23,21 @@ class TravelOrderService
     public function update(int $id, array $data)
     {
         $travelOrder = TravelOrder::findOrFail($id);
+
+        if ($travelOrder->status !== 'pending') {
+            return $travelOrder;
+        }
+
         $travelOrder->update($data);
 
         return $travelOrder;
     }
 
-    public function delete(int $id)
+    public function updateStatus(int $id, string $status)
     {
         $travelOrder = TravelOrder::findOrFail($id);
-        $travelOrder->delete();
+        $travelOrder->status = $status;
+        $travelOrder->save();
 
         return $travelOrder;
     }
@@ -46,6 +52,14 @@ class TravelOrderService
 
         $travelOrder->status = 'cancelled';
         $travelOrder->save();
+
+        return $travelOrder;
+    }
+
+    public function delete(int $id)
+    {
+        $travelOrder = TravelOrder::findOrFail($id);
+        $travelOrder->delete();
 
         return $travelOrder;
     }
