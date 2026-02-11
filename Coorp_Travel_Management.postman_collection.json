@@ -18,7 +18,10 @@
 								"exec": [
 									"if (pm.response.code === 201) {",
 									"    const jsonData = pm.response.json();",
-									"    pm.environment.set(\"auth_token\", jsonData.token);",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.environment.set(\"auth_token\", jsonData.data.token);",
+									"        console.log(\"Token salvo com sucesso!\");",
+									"    }",
 									"}"
 								],
 								"type": "text/javascript"
@@ -61,7 +64,10 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const jsonData = pm.response.json();",
-									"    pm.environment.set(\"auth_token\", jsonData.token);",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.environment.set(\"auth_token\", jsonData.data.token);",
+									"        console.log(\"Login realizado! Token salvo com sucesso!\");",
+									"    }",
 									"}"
 								],
 								"type": "text/javascript"
@@ -92,6 +98,52 @@
 							]
 						},
 						"description": "Login de usuário"
+					},
+					"response": []
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.environment.set(\"auth_token\", jsonData.data.token);",
+									"        console.log(\"Login Admin realizado! Token salvo em auth_token!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login de administrador - salva token em auth_token"
 					},
 					"response": []
 				},
@@ -202,6 +254,52 @@
 						"description": "Logout de todos os tokens do usuário"
 					},
 					"response": []
+				},
+				{
+					"name": "Register Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.environment.set(\"auth_token\", jsonData.data.token);",
+									"        console.log(\"Admin registrado! Token salvo em auth_token!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\",\n    \"password_confirmation\": \"admin123\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registrar novo usuário admin (role: admin)"
+					},
+					"response": []
 				}
 			]
 		},
@@ -215,7 +313,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
+								"value": "Bearer {{auth_token}}"
 							},
 							{
 								"key": "Content-Type",
@@ -224,7 +322,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Jane Admin\",\n    \"email\": \"jane.admin@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\",\n    \"role\": \"admin\"\n}"
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"user\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/create-user",
@@ -248,7 +346,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
+								"value": "Bearer {{auth_token}}"
 							}
 						],
 						"url": {
@@ -273,7 +371,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
+								"value": "Bearer {{auth_token}}"
 							}
 						],
 						"url": {
@@ -299,7 +397,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
+								"value": "Bearer {{auth_token}}"
 							},
 							{
 								"key": "Content-Type",
@@ -522,7 +620,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
+								"value": "Bearer {{auth_token}}"
 							},
 							{
 								"key": "Content-Type",
@@ -556,7 +654,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
+								"value": "Bearer {{auth_token}}"
 							},
 							{
 								"key": "Content-Type",

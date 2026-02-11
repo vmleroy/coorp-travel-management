@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Events\OrderStatusChanged;
 use App\Events\TravelOrderCreated;
+use App\Events\TravelOrderDeleted;
+use App\Helpers\AuthorizationHelper;
 use App\Models\TravelOrder;
 use App\Models\User;
 use App\Notifications\NewTravelOrderForAdmin;
 use App\Notifications\OrderStatusUpdated;
+use App\Notifications\TravelOrderDeleted as TravelOrderDeletedNotification;
 use Illuminate\Database\Eloquent\Builder;
 
 class TravelOrderService
@@ -22,10 +25,8 @@ class TravelOrderService
             'status' => 'pending',
         ]);
 
-        // Dispatch broadcast event for admins
         TravelOrderCreated::dispatch($travelOrder);
 
-        // Notify all admin users
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new NewTravelOrderForAdmin($travelOrder));
@@ -34,10 +35,8 @@ class TravelOrderService
         return $travelOrder;
     }
 
-    public function update(int $id, array $data)
+    public function update(TravelOrder $travelOrder, array $data)
     {
-        $travelOrder = TravelOrder::findOrFail($id);
-
         if ($travelOrder->status !== 'pending') {
             throw new \Exception('Não é possível editar uma solicitação que não está pendente. Status atual: ' . $travelOrder->status);
         }
@@ -52,7 +51,6 @@ class TravelOrderService
         $travelOrder = TravelOrder::findOrFail($id);
         $previousStatus = $travelOrder->status;
 
-        // Only send notification if status actually changed and is approved or rejected
         $shouldNotify = $previousStatus !== $status &&
                         in_array($status, ['approved', 'rejected']);
 
@@ -60,10 +58,7 @@ class TravelOrderService
         $travelOrder->save();
 
         if ($shouldNotify) {
-            // Dispatch broadcast event
             OrderStatusChanged::dispatch($travelOrder, $previousStatus);
-
-            // Send notification (database, mail, broadcast)
             $travelOrder->user->notify(new OrderStatusUpdated($travelOrder, $previousStatus));
         }
 
@@ -75,7 +70,6 @@ class TravelOrderService
         $travelOrder = TravelOrder::findOrFail($id);
         $previousStatus = $travelOrder->status;
 
-        // Only allow cancellation if status is pending (not yet approved)
         if ($travelOrder->status !== 'pending') {
             throw new \Exception('Não é possível cancelar uma solicitação que não está pendente. Status atual: ' . $travelOrder->status);
         }
@@ -83,18 +77,27 @@ class TravelOrderService
         $travelOrder->status = 'cancelled';
         $travelOrder->save();
 
-        // Dispatch broadcast event
         OrderStatusChanged::dispatch($travelOrder, $previousStatus);
-
-        // Send notification about cancellation (database, mail, broadcast)
         $travelOrder->user->notify(new OrderStatusUpdated($travelOrder, $previousStatus));
 
         return $travelOrder;
     }
 
-    public function delete(int $id)
+    public function delete(int $travelOrderId, User $currentUser)
     {
-        $travelOrder = TravelOrder::findOrFail($id);
+        $travelOrder = TravelOrder::findOrFail($travelOrderId);
+
+        if (!AuthorizationHelper::isAdmin($currentUser) && $travelOrder->status !== 'pending') {
+            throw new \Exception('N\u00e3o \u00e9 poss\u00edvel excluir esta solicita\u00e7\u00e3o. O administrador j\u00e1 interagiu com ela.');
+        }
+
+        if (AuthorizationHelper::isAdmin($currentUser)) {
+            $travelOrder->user->notify(new TravelOrderDeletedNotification($travelOrder, 'Administrador'));
+            TravelOrderDeleted::dispatch($travelOrder, 'Administrador');
+        } else {
+            TravelOrderDeleted::dispatch($travelOrder, 'Usu\u00e1rio');
+        }
+
         $travelOrder->delete();
 
         return $travelOrder;
@@ -123,7 +126,6 @@ class TravelOrderService
 
     private function applyFilters(Builder $query, array $filters)
     {
-        // Filter by status
         if (!empty($filters['status'])) {
             $status = $filters['status'];
             if (is_array($status)) {
@@ -135,12 +137,10 @@ class TravelOrderService
             }
         }
 
-        // Filter by destination
         if (!empty($filters['destination'])) {
             $query->where('destination', 'like', '%' . $filters['destination'] . '%');
         }
 
-        // Filter by departure date range
         if (!empty($filters['departure_date_from'])) {
             $query->whereDate('departure_date', '>=', $filters['departure_date_from']);
         }
@@ -149,7 +149,6 @@ class TravelOrderService
             $query->whereDate('departure_date', '<=', $filters['departure_date_to']);
         }
 
-        // Filter by return date range
         if (!empty($filters['return_date_from'])) {
             $query->whereDate('return_date', '>=', $filters['return_date_from']);
         }
@@ -158,7 +157,6 @@ class TravelOrderService
             $query->whereDate('return_date', '<=', $filters['return_date_to']);
         }
 
-        // Filter by created_at date range
         if (!empty($filters['created_from'])) {
             $query->whereDate('created_at', '>=', $filters['created_from']);
         }
@@ -167,7 +165,6 @@ class TravelOrderService
             $query->whereDate('created_at', '<=', $filters['created_to']);
         }
 
-        // Sort
         if (!empty($filters['sort_by'])) {
             $sortBy = $filters['sort_by'];
             $sortOrder = $filters['sort_order'] ?? 'asc';

@@ -17,7 +17,6 @@ class CheckUserRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // Check if user is authenticated
         if (!$request->user()) {
             return response()->json([
                 'success' => false,
@@ -26,12 +25,10 @@ class CheckUserRole
             ], 401);
         }
 
-        // If no roles specified, just check authentication
         if (empty($roles)) {
             return $next($request);
         }
 
-        // Convert string roles to UserRole enums
         $allowedRoles = array_map(function ($role) {
             return match ($role) {
                 'admin' => UserRole::ADMIN,
@@ -40,7 +37,6 @@ class CheckUserRole
             };
         }, $roles);
 
-        // Check if user has one of the allowed roles
         if (!in_array($request->user()->role, $allowedRoles, true)) {
             return response()->json([
                 'success' => false,

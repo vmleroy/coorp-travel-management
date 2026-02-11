@@ -34,6 +34,8 @@ class TravelOrderController extends Controller
             'return_date.after_or_equal' => 'A data de retorno deve ser igual ou posterior à data de partida.',
         ]);
 
+        $requestedData['user_id'] = $request->user()->id;
+
         $result = $this->travelOrderService->create($requestedData);
 
         return response()->json([
@@ -51,14 +53,13 @@ class TravelOrderController extends Controller
      */
     public function show(Request $request)
     {
-        $id = $request->route('id');
-        $result = $this->travelOrderService->get($id);
+        $travelOrder = $request->get('travel_order');
 
         return response()->json([
             'success' => true,
             'message' => 'Solicitação de viagem recuperada com sucesso.',
             'data' => [
-                'travel_order' => $result,
+                'travel_order' => $travelOrder,
             ]
         ], 200);
     }
@@ -84,7 +85,7 @@ class TravelOrderController extends Controller
      */
     public function showAllByUser(Request $request)
     {
-        $userId = $request->route('user_id');
+        $userId = $request->user()->id;
         $result = $this->travelOrderService->getByUserId($userId);
 
         return response()->json([
@@ -101,7 +102,7 @@ class TravelOrderController extends Controller
      */
     public function update(Request $request)
     {
-        $id = $request->route('id');
+        $travelOrder = $request->get('travel_order');
         $requestedData = $request->validate([
             'destination' => 'sometimes|required|string|max:255',
             'departure_date' => 'sometimes|required|date',
@@ -116,7 +117,7 @@ class TravelOrderController extends Controller
             'return_date.after_or_equal' => 'A data de retorno deve ser igual ou posterior à data de partida.',
         ]);
 
-        $result = $this->travelOrderService->update($id, $requestedData);
+        $result = $this->travelOrderService->update($travelOrder, $requestedData);
 
         return response()->json([
             'success' => true,
@@ -133,7 +134,7 @@ class TravelOrderController extends Controller
     public function destroy(Request $request)
     {
         $id = $request->route('id');
-        $result = $this->travelOrderService->delete($id);
+        $result = $this->travelOrderService->delete($id, $request->user());
 
         return response()->json([
             'success' => true,

@@ -1,5 +1,10 @@
 # Postman Collection - Coorp Travel Management
 
+## 📚 Documentação
+
+- **[Guia de Autenticação Automática](POSTMAN_AUTH.md)** ← Leia primeiro para configurar login automático
+- Este arquivo: Visão geral da collection e endpoints
+
 ## 📥 Como Importar
 
 ### 1. Importar Collection e Environment
@@ -15,6 +20,14 @@
 
 - No canto superior direito, selecione **Coorp Travel - Local**
 
+## 🔑 Autenticação Automática
+
+✅ **Os endpoints de Login e Register salvam o token automaticamente!**
+
+Após fazer login ou registro, o token é salvo em `{{auth_token}}` e todas as requisições autenticadas já vão funcionar.
+
+👉 **[Veja o guia completo de autenticação](POSTMAN_AUTH.md)**
+
 ## 🚀 Fluxo de Teste Recomendado
 
 ### Passo 1: Verificar API
@@ -28,7 +41,7 @@ Deve retornar `{"status": "ok", "timestamp": "..."}`
 POST /api/auth/register
 ```
 - Cria usuário com role `user`
-- Token é salvo automaticamente em `{{auth_token}}`
+- ✅ Token salvo automaticamente em `{{auth_token}}`
 
 ### Passo 3: Criar Admin (via seed ou primeiro usuário)
 
@@ -49,7 +62,7 @@ $admin = App\Models\User::create([
 1. Faça login como primeiro usuário criado
 2. Use **Create User (Admin)** para criar um admin
 3. Faça login com o admin criado
-4. Token admin é salvo em `{{admin_token}}`
+4. Token admin é salvo em `{{auth_token}}`
 
 ### Passo 4: Testar Travel Orders
 
@@ -61,7 +74,7 @@ $admin = App\Models\User::create([
 
 ### Passo 5: Testar Admin Functions
 
-Com `{{admin_token}}`:
+Com `{{auth_token}}`:
 1. **Change Order Status** - Aprovar/Rejeitar ordem
 2. **Cancel Order** - Cancelar ordem com motivo
 
@@ -121,7 +134,7 @@ Com `{{admin_token}}`:
 
 - `base_url` - URL da API (default: http://localhost:8000)
 - `auth_token` - Token do usuário normal (preenchido automaticamente)
-- `admin_token` - Token do admin (preencher manualmente após login)
+- `auth_token` - Token do admin (preencher manualmente após login)
 - `travel_order_id` - ID da última ordem criada (preenchido automaticamente)
 
 ## 💡 Dicas
@@ -131,7 +144,7 @@ Após fazer login como admin, vá em **Tests** da request de Login e adicione:
 ```javascript
 if (pm.response.code === 200) {
     const jsonData = pm.response.json();
-    pm.environment.set("admin_token", jsonData.token);
+    pm.environment.set("auth_token", jsonData.token);
 }
 ```
 
@@ -165,12 +178,12 @@ Para testar com diferentes dados, clique com botão direito na request > **Dupli
 ## 🔧 Troubleshooting
 
 ### 401 Unauthorized
-- Verifique se o token está correto em `{{auth_token}}` ou `{{admin_token}}`
+- Verifique se o token está correto em `{{auth_token}}` ou `{{auth_token}}`
 - Faça login novamente
 
 ### 403 Forbidden
 - Endpoint requer permissão de admin
-- Use `{{admin_token}}` em vez de `{{auth_token}}`
+- Use `{{auth_token}}` em vez de `{{auth_token}}`
 
 ### 404 Not Found
 - Verifique se `{{travel_order_id}}` tem um valor

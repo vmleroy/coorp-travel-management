@@ -143,7 +143,6 @@ class AuthService
     {
         $query = User::query();
 
-        // Apply filters
         if ($filters) {
             if (isset($filters['role'])) {
                 $query->where('role', $filters['role']);
