@@ -123,7 +123,12 @@ test('event is not dispatched when cancel fails', function () {
     ]);
 
     $service = app(\App\Services\TravelOrderService::class);
-    $service->cancel($order->id);
+    
+    try {
+        $service->cancel($order->id);
+    } catch (\Exception $e) {
+        // Expected exception
+    }
 
     Event::assertNotDispatched(OrderStatusChanged::class);
 });

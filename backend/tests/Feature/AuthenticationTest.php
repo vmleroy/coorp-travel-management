@@ -22,9 +22,12 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'user' => ['id', 'name', 'email'],
-                'token',
+                'success',
                 'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email'],
+                    'token',
+                ],
             ]);
 
         $this->assertDatabaseHas('users', [
@@ -57,9 +60,12 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'user' => ['id', 'name', 'email'],
-                'token',
+                'success',
                 'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email'],
+                    'token',
+                ],
             ]);
     }
 
@@ -87,7 +93,13 @@ class AuthenticationTest extends TestCase
             ->getJson('/api/auth/me');
 
         $response->assertStatus(200)
-            ->assertJsonStructure(['user' => ['id', 'name', 'email']]);
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email']
+                ]
+            ]);
     }
 
     public function test_user_can_logout(): void
@@ -102,7 +114,10 @@ class AuthenticationTest extends TestCase
             ->postJson('/api/auth/logout');
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Logged out successfully']);
+            ->assertJson([
+                'success' => true,
+                'message' => 'Logout realizado com sucesso!'
+            ]);
 
         // Verify token was deleted from database
         $user->refresh();
@@ -129,7 +144,10 @@ class AuthenticationTest extends TestCase
             ->postJson('/api/auth/logout-all');
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Logged out from all devices']);
+            ->assertJson([
+                'success' => true,
+                'message' => 'Logout realizado em todos os dispositivos com sucesso!'
+            ]);
 
         // Verify both tokens are deleted from database
         $this->assertEquals(0, $user->tokens()->count());
@@ -147,9 +165,13 @@ class AuthenticationTest extends TestCase
             ->postJson('/api/auth/refresh');
 
         $response->assertStatus(200)
-            ->assertJsonStructure(['token', 'message']);
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => ['token']
+            ]);
 
-        $newToken = $response->json('token');
+        $newToken = $response->json('data.token');
 
         // Verify new token was created and only one token exists
         $user->refresh();
@@ -197,8 +219,11 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'user' => ['id', 'name', 'email', 'role'],
+                'success',
                 'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email', 'role'],
+                ],
             ]);
 
         $this->assertDatabaseHas('users', [
@@ -238,7 +263,12 @@ class AuthenticationTest extends TestCase
             ]);
 
         $response->assertStatus(403)
-            ->assertJson(['message' => 'Forbidden. You do not have the required role.']);
+            ->assertJson([
+                'success' => false,
+                'message' => 'Acesso negado. Você não possui permissão para executar esta ação.',
+                'error' => 'forbidden',
+                'required_role' => 'admin'
+            ]);
 
         $this->assertDatabaseMissing('users', [
             'email' => 'unauthorized@example.com',
@@ -256,9 +286,12 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'users',
-                'pagination' => ['current_page', 'per_page', 'total', 'last_page'],
+                'success',
                 'message',
+                'data' => [
+                    'users',
+                    'pagination' => ['current_page', 'per_page', 'total', 'last_page'],
+                ],
             ]);
     }
 
@@ -273,7 +306,7 @@ class AuthenticationTest extends TestCase
             ->getJson('/api/auth/users?role=admin');
 
         $response->assertStatus(200);
-        $users = $response->json('users');
+        $users = $response->json('data.users');
 
         // Should have 3 admins total (including the one making the request)
         $this->assertCount(3, $users);
@@ -293,7 +326,7 @@ class AuthenticationTest extends TestCase
             ->getJson('/api/auth/users?search=john');
 
         $response->assertStatus(200);
-        $users = $response->json('users');
+        $users = $response->json('data.users');
 
         $this->assertCount(1, $users);
         $this->assertEquals('John Doe', $users[0]['name']);
@@ -309,7 +342,7 @@ class AuthenticationTest extends TestCase
             ->getJson('/api/auth/users?per_page=10');
 
         $response->assertStatus(200);
-        $pagination = $response->json('pagination');
+        $pagination = $response->json('data.pagination');
 
         $this->assertEquals(10, $pagination['per_page']);
         $this->assertEquals(26, $pagination['total']); // 25 + 1 admin
@@ -337,9 +370,13 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'user' => [
-                    'id' => $targetUser->id,
-                    'name' => 'Target User',
+                'success' => true,
+                'message' => 'Usuário recuperado com sucesso.',
+                'data' => [
+                    'user' => [
+                        'id' => $targetUser->id,
+                        'name' => 'Target User',
+                    ],
                 ],
             ]);
     }

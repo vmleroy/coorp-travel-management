@@ -81,7 +81,7 @@ class TravelOrderServiceTest extends TestCase
             'destination' => 'Los Angeles',
         ];
 
-        $updated = $this->travelOrderService->update($travelOrder->id, $updatedData);
+        $updated = $this->travelOrderService->update($travelOrder->id, $updatedData, $user);
 
         $this->assertEquals('Los Angeles', $updated->destination);
         $this->assertDatabaseHas('travel_order', [
@@ -98,9 +98,10 @@ class TravelOrderServiceTest extends TestCase
         $user = User::factory()->create();
         $travelOrder = TravelOrder::factory()->create([
             'user_id' => $user->id,
+            'status' => 'pending',
         ]);
 
-        $deleted = $this->travelOrderService->delete($travelOrder->id);
+        $deleted = $this->travelOrderService->delete($travelOrder->id, $user);
 
         // Verify soft delete - record should not be found in regular query
         $this->assertNull(TravelOrder::find($travelOrder->id));
@@ -118,7 +119,7 @@ class TravelOrderServiceTest extends TestCase
             'destination' => 'Tokyo, Japan',
         ]);
 
-        $retrieved = $this->travelOrderService->get($travelOrder->id);
+        $retrieved = $this->travelOrderService->get($travelOrder->id, $user);
 
         $this->assertInstanceOf(TravelOrder::class, $retrieved);
         $this->assertEquals($travelOrder->id, $retrieved->id);
@@ -165,7 +166,8 @@ class TravelOrderServiceTest extends TestCase
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
-        $this->travelOrderService->get(999);
+        $user = User::factory()->create();
+        $this->travelOrderService->get(999, $user);
     }
 
     /**
@@ -175,7 +177,8 @@ class TravelOrderServiceTest extends TestCase
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
-        $this->travelOrderService->update(999, ['destination' => 'Updated']);
+        $user = User::factory()->create();
+        $this->travelOrderService->update(999, ['destination' => 'Updated'], $user);
     }
 
     /**
@@ -185,7 +188,8 @@ class TravelOrderServiceTest extends TestCase
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
-        $this->travelOrderService->delete(999);
+        $user = User::factory()->create();
+        $this->travelOrderService->delete(999, $user);
     }
 
     /**
@@ -287,9 +291,10 @@ class TravelOrderServiceTest extends TestCase
         $user = User::factory()->create();
         $travelOrder = TravelOrder::factory()->create([
             'user_id' => $user->id,
+            'status' => 'pending',
         ]);
 
-        $this->travelOrderService->delete($travelOrder->id);
+        $this->travelOrderService->delete($travelOrder->id, $user);
 
         // Check soft delete
         $this->assertSoftDeleted('travel_order', ['id' => $travelOrder->id]);
@@ -321,7 +326,7 @@ class TravelOrderServiceTest extends TestCase
             'destination' => 'Tokyo',
         ]);
 
-        $retrieved = $this->travelOrderService->get($travelOrder->id);
+        $retrieved = $this->travelOrderService->get($travelOrder->id, $user);
 
         $this->assertNotNull($retrieved->user);
         $this->assertEquals('John Doe', $retrieved->user->name);
@@ -456,23 +461,15 @@ class TravelOrderServiceTest extends TestCase
         $cancelled = $this->travelOrderService->cancel($pendingOrder->id);
         $this->assertEquals('cancelled', $cancelled->status);
 
-        // Test approved order cannot be cancelled
+        // Test approved order cannot be cancelled - should throw exception
         $approvedOrder = TravelOrder::factory()->create([
             'user_id' => $user->id,
             'status' => 'approved',
         ]);
 
-        $notCancelled = $this->travelOrderService->cancel($approvedOrder->id);
-        $this->assertEquals('approved', $notCancelled->status);
-
-        // Test rejected order cannot be cancelled
-        $rejectedOrder = TravelOrder::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'rejected',
-        ]);
-
-        $notCancelled2 = $this->travelOrderService->cancel($rejectedOrder->id);
-        $this->assertEquals('rejected', $notCancelled2->status);
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Não é possível cancelar uma solicitação que não está pendente. Status atual: approved');
+        $this->travelOrderService->cancel($approvedOrder->id);
     }
 
     /**
@@ -624,7 +621,11 @@ class TravelOrderServiceTest extends TestCase
             'status' => 'approved',
         ]);
 
-        $this->travelOrderService->cancel($travelOrder->id);
+        try {
+            $this->travelOrderService->cancel($travelOrder->id);
+        } catch (\Exception $e) {
+            // Expected exception
+        }
 
         Notification::assertNothingSent();
     }

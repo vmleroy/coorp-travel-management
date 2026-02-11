@@ -41,7 +41,7 @@ class CheckUserRoleTest extends TestCase
 
         $this->assertEquals(401, $response->getStatusCode());
         $json = json_decode($response->getContent(), true);
-        $this->assertEquals('Unauthenticated.', $json['message']);
+        $this->assertEquals('Autenticação necessária. Por favor, faça login para acessar este recurso.', $json['message']);
     }
 
     public function test_middleware_allows_admin_user_for_admin_role(): void
@@ -65,7 +65,7 @@ class CheckUserRoleTest extends TestCase
 
         $this->assertEquals(403, $response->getStatusCode());
         $json = json_decode($response->getContent(), true);
-        $this->assertEquals('Forbidden. You do not have the required role.', $json['message']);
+        $this->assertEquals('Acesso negado. Você não possui permissão para executar esta ação.', $json['message']);
     }
 
     public function test_middleware_allows_regular_user_for_user_role(): void
