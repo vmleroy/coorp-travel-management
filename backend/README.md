@@ -1,59 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Backend - Sistema de Gerenciamento de Viagens Corporativas
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST desenvolvida em Laravel para gerenciamento de solicitações de viagens corporativas.
 
-## About Laravel
+## 🚀 Tecnologias
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Laravel 11** - Framework PHP
+- **SQLite** - Banco de dados
+- **Laravel Sanctum** - Autenticação API
+- **Laravel Reverb** - WebSockets para notificações em tempo real
+- **PHP 8.4** - Linguagem de programação
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Pré-requisitos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP >= 8.4
+- Composer
+- SQLite3
 
-## Learning Laravel
+## ⚙️ Configuração
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 1. Instalar dependências
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+```
 
-## Laravel Sponsors
+### 2. Configurar variáveis de ambiente
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Copie o arquivo `.env.example` para `.env`:
 
-### Premium Partners
+```bash
+cp .env.example .env
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 3. Variáveis de ambiente essenciais
 
-## Contributing
+Edite o arquivo `.env` com as seguintes configurações:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+# Aplicação
+APP_NAME="Travel Management"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
 
-## Code of Conduct
+# Banco de dados (SQLite)
+DB_CONNECTION=sqlite
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Email (desenvolvimento)
+MAIL_MAILER=log
 
-## Security Vulnerabilities
+# Broadcasting/WebSockets
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=travel-management
+REVERB_APP_KEY=local-app-key
+REVERB_APP_SECRET=local-app-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Cache e Sessão
+CACHE_STORE=database
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+```
 
-## License
+### 4. Gerar chave da aplicação
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan key:generate
+```
+
+### 5. Criar banco de dados
+
+```bash
+touch database/database.sqlite
+```
+
+### 6. Executar migrations
+
+```bash
+php artisan migrate
+```
+
+### 7. (Opcional) Popular banco com dados de teste
+
+```bash
+php artisan db:seed
+```
+
+## 🏃 Executar a aplicação
+
+### Iniciar servidor de desenvolvimento
+
+```bash
+php artisan serve
+```
+
+A API estará disponível em `http://localhost:8000`
+
+### Iniciar WebSocket (para notificações em tempo real)
+
+Em outro terminal:
+
+```bash
+php artisan reverb:start
+```
+
+O servidor WebSocket estará em `http://localhost:8080`
+
+### Executar fila de jobs (para processar notificações)
+
+Em outro terminal:
+
+```bash
+php artisan queue:work
+```
+
+## 📚 Documentação da API
+
+### Autenticação
+
+Todas as rotas (exceto registro e login) requerem autenticação via Bearer Token.
+
+**Header:**
+```
+Authorization: Bearer {seu_token}
+```
+
+### Endpoints principais
+
+- `POST /api/auth/register` - Registrar usuário
+- `POST /api/auth/login` - Login
+- `GET /api/travel-orders` - Listar solicitações (admin)
+- `POST /api/travel-orders` - Criar solicitação
+- `GET /api/travel-orders/{id}` - Ver solicitação
+- `PUT /api/travel-orders/{id}` - Atualizar solicitação
+- `DELETE /api/travel-orders/{id}` - Excluir solicitação
+- `PUT /api/travel-orders/{id}/change-status` - Aprovar/Rejeitar (admin)
+- `PUT /api/travel-orders/{id}/cancel` - Cancelar solicitação (admin)
+
+## 🔐 Roles (Papéis)
+
+- **user** - Usuário comum (pode criar e gerenciar suas próprias solicitações)
+- **admin** - Administrador (pode gerenciar todas as solicitações)
+
+## 📧 Notificações
+
+O sistema envia notificações via:
+- **Database** - Armazenadas no banco
+- **Email** - Logs em `storage/logs/laravel.log`
+- **Broadcast** - Tempo real via WebSocket
+
+### Eventos notificados
+
+- Nova solicitação criada (para admins)
+- Status alterado (aprovado/rejeitado)
+- Solicitação excluída pelo admin
+- Solicitação cancelada
+
+## 🗃️ Estrutura do Projeto
+
+```
+app/
+├── Enums/           # Enumerações (UserRole)
+├── Events/          # Eventos (TravelOrderCreated, OrderStatusChanged)
+├── Helpers/         # Funções auxiliares (AuthorizationHelper)
+├── Http/
+│   ├── Controllers/ # Controladores da API
+│   └── Middleware/  # Middlewares (CheckUserRole)
+├── Models/          # Models Eloquent (User, TravelOrder)
+├── Notifications/   # Notificações do sistema
+└── Services/        # Lógica de negócio (TravelOrderService, AuthService)
+
+database/
+├── migrations/      # Migrações do banco
+└── seeders/         # Seeders
+
+routes/
+├── api.php          # Rotas da API
+└── channels.php     # Canais de broadcasting
+```
+
+## 🧪 Testes
+
+```bash
+php artisan test
+```
+
+## 🐛 Debug
+
+Logs são armazenados em `storage/logs/laravel.log`
