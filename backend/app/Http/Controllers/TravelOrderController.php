@@ -53,7 +53,8 @@ class TravelOrderController extends Controller
      */
     public function show(Request $request)
     {
-        $travelOrder = $request->get('travel_order');
+        $travelOrderId = $request->route('id');
+        $travelOrder = $this->travelOrderService->get($travelOrderId, $request->user());
 
         return response()->json([
             'success' => true,
@@ -102,7 +103,7 @@ class TravelOrderController extends Controller
      */
     public function update(Request $request)
     {
-        $travelOrder = $request->get('travel_order');
+        $id = $request->route('id');
         $requestedData = $request->validate([
             'destination' => 'sometimes|required|string|max:255',
             'departure_date' => 'sometimes|required|date',
@@ -117,7 +118,7 @@ class TravelOrderController extends Controller
             'return_date.after_or_equal' => 'A data de retorno deve ser igual ou posterior à data de partida.',
         ]);
 
-        $result = $this->travelOrderService->update($travelOrder, $requestedData);
+        $result = $this->travelOrderService->update($id, $requestedData, $request->user());
 
         return response()->json([
             'success' => true,
@@ -150,12 +151,18 @@ class TravelOrderController extends Controller
         $id = $request->route('id');
         $requestedData = $request->validate([
             'status' => 'required|string|in:approved,rejected',
+            'reason' => 'nullable|string|max:1000',
         ], [
             'status.required' => 'O status é obrigatório.',
             'status.in' => 'O status deve ser "approved" (aprovado) ou "rejected" (rejeitado).',
+            'reason.max' => 'O motivo não pode ter mais de 1000 caracteres.',
         ]);
 
-        $result = $this->travelOrderService->updateStatus($id, $requestedData['status']);
+        $result = $this->travelOrderService->updateStatus(
+            $id,
+            $requestedData['status'],
+            $requestedData['reason'] ?? null
+        );
 
         $statusMessage = $requestedData['status'] === 'approved' ? 'aprovada' : 'rejeitada';
 
@@ -174,7 +181,13 @@ class TravelOrderController extends Controller
     public function cancel(Request $request)
     {
         $id = $request->route('id');
-        $result = $this->travelOrderService->cancel($id);
+        $requestedData = $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ], [
+            'reason.max' => 'O motivo não pode ter mais de 1000 caracteres.',
+        ]);
+
+        $result = $this->travelOrderService->cancel($id, $requestedData['reason'] ?? null);
 
         return response()->json([
             'success' => true,

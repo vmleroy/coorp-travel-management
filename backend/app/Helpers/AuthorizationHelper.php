@@ -21,4 +21,11 @@ class AuthorizationHelper
     {
         return self::isAdmin($user) || self::isOwner($user, $travelOrder);
     }
+
+    public static function canAccessTravelOrder(User $user, TravelOrder $travelOrder): void
+    {
+        if (!self::isAdminOrOwner($user, $travelOrder)) {
+            throw new \Exception('Você não tem permissão para acessar esta solicitação.');
+        }
+    }
 }

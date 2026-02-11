@@ -42,12 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('travel-orders')->group(function () {
         Route::post('/', [\App\Http\Controllers\TravelOrderController::class, 'store']);
         Route::get('/user', [\App\Http\Controllers\TravelOrderController::class, 'showAllByUser']);
-
-        Route::middleware('travel_order.ownership')->group(function () {
-            Route::get('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'destroy']);
-        });
+        Route::get('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\TravelOrderController::class, 'destroy']);
 
         Route::middleware('role:admin')->group(function () {
             Route::get('/', [\App\Http\Controllers\TravelOrderController::class, 'showAll']);

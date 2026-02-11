@@ -19,6 +19,7 @@ class TravelOrder extends Model
         'departure_date',
         'return_date',
         'status',
+        'reason',
     ];
 
     protected $casts = [

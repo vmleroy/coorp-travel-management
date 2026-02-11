@@ -35,8 +35,12 @@ class TravelOrderService
         return $travelOrder;
     }
 
-    public function update(TravelOrder $travelOrder, array $data)
+    public function update(int $id, array $data, User $currentUser)
     {
+        $travelOrder = TravelOrder::findOrFail($id);
+
+        AuthorizationHelper::canAccessTravelOrder($currentUser, $travelOrder);
+
         if ($travelOrder->status !== 'pending') {
             throw new \Exception('Não é possível editar uma solicitação que não está pendente. Status atual: ' . $travelOrder->status);
         }
@@ -46,7 +50,7 @@ class TravelOrderService
         return $travelOrder;
     }
 
-    public function updateStatus(int $id, string $status)
+    public function updateStatus(int $id, string $status, ?string $reason = null)
     {
         $travelOrder = TravelOrder::findOrFail($id);
         $previousStatus = $travelOrder->status;
@@ -55,6 +59,11 @@ class TravelOrderService
                         in_array($status, ['approved', 'rejected']);
 
         $travelOrder->status = $status;
+
+        if ($status === 'rejected' && $reason) {
+            $travelOrder->reason = $reason;
+        }
+
         $travelOrder->save();
 
         if ($shouldNotify) {
@@ -65,7 +74,7 @@ class TravelOrderService
         return $travelOrder;
     }
 
-    public function cancel(int $id)
+    public function cancel(int $id, ?string $reason = null)
     {
         $travelOrder = TravelOrder::findOrFail($id);
         $previousStatus = $travelOrder->status;
@@ -75,6 +84,11 @@ class TravelOrderService
         }
 
         $travelOrder->status = 'cancelled';
+
+        if ($reason) {
+            $travelOrder->reason = $reason;
+        }
+
         $travelOrder->save();
 
         OrderStatusChanged::dispatch($travelOrder, $previousStatus);
@@ -87,15 +101,17 @@ class TravelOrderService
     {
         $travelOrder = TravelOrder::findOrFail($travelOrderId);
 
+        AuthorizationHelper::canAccessTravelOrder($currentUser, $travelOrder);
+
         if (!AuthorizationHelper::isAdmin($currentUser) && $travelOrder->status !== 'pending') {
-            throw new \Exception('N\u00e3o \u00e9 poss\u00edvel excluir esta solicita\u00e7\u00e3o. O administrador j\u00e1 interagiu com ela.');
+            throw new \Exception('Não é possível excluir esta solicitação. O administrador já interagiu com ela.');
         }
 
         if (AuthorizationHelper::isAdmin($currentUser)) {
             $travelOrder->user->notify(new TravelOrderDeletedNotification($travelOrder, 'Administrador'));
             TravelOrderDeleted::dispatch($travelOrder, 'Administrador');
         } else {
-            TravelOrderDeleted::dispatch($travelOrder, 'Usu\u00e1rio');
+            TravelOrderDeleted::dispatch($travelOrder, 'Usuário');
         }
 
         $travelOrder->delete();
@@ -103,9 +119,11 @@ class TravelOrderService
         return $travelOrder;
     }
 
-    public function get(int $id)
+    public function get(int $id, User $currentUser)
     {
         $travelOrder = TravelOrder::findOrFail($id);
+
+        AuthorizationHelper::canAccessTravelOrder($currentUser, $travelOrder);
 
         return $travelOrder;
     }

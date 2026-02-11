@@ -15,7 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckUserRole::class,
-            'travel_order.ownership' => \App\Http\Middleware\CheckTravelOrderOwnership::class,
         ]);
 
         // Disable redirect to login for API routes
