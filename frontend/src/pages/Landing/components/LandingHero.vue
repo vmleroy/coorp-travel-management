@@ -29,14 +29,14 @@ const handleLogin = () => {
       <div class="text-center">
         <!-- Logo/Brand -->
         <div class="flex justify-center mb-8">
-          <div class="inline-flex items-center gap-3 px-6 py-3 bg-white rounded-2xl shadow-lg">
+          <div class="inline-flex items-center gap-3 px-6 py-3 rounded-2xl" style="background-color: var(--color-background); box-shadow: var(--shadow-lg)">
             <TravelHubIcon :size="32" color="#4F46E5" />
-            <span class="text-2xl font-bold text-gray-900">TravelHub</span>
+            <span class="text-2xl font-bold" style="color: var(--color-foreground)">TravelHub</span>
           </div>
         </div>
 
         <!-- Heading -->
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6" style="color: var(--color-foreground)">
           Gerencie suas
           <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
             viagens corporativas
@@ -46,7 +46,7 @@ const handleLogin = () => {
         </h1>
 
         <!-- Subheading -->
-        <p class="max-w-2xl mx-auto text-xl text-gray-600 mb-12">
+        <p class="max-w-2xl mx-auto text-xl mb-12" style="color: var(--color-foreground-muted)">
           Sistema completo para solicitação, aprovação e acompanhamento de viagens corporativas.
           Notificações em tempo real e controle total.
         </p>
@@ -74,19 +74,19 @@ const handleLogin = () => {
           <Card class="text-center">
             <template #content>
               <div class="text-3xl font-bold text-indigo-600 mb-2">100%</div>
-              <div class="text-gray-600">Digital</div>
+              <div style="color: var(--color-foreground-muted)">Digital</div>
             </template>
           </Card>
           <Card class="text-center">
             <template #content>
               <div class="text-3xl font-bold text-indigo-600 mb-2">Real-time</div>
-              <div class="text-gray-600">Notificações</div>
+              <div style="color: var(--color-foreground-muted)">Notificações</div>
             </template>
           </Card>
           <Card class="text-center">
             <template #content>
               <div class="text-3xl font-bold text-indigo-600 mb-2">24/7</div>
-              <div class="text-gray-600">Disponível</div>
+              <div style="color: var(--color-foreground-muted)">Disponível</div>
             </template>
           </Card>
         </div>

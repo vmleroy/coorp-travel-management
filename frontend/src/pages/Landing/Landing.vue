@@ -18,7 +18,7 @@ const handleLoginSuccess = () => {
 </script>
 
 <template name="landing-page">
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen" style="background-color: var(--color-background-muted)">
     <LandingHero @open-login="openLoginModal" />
     <LandingFeatures />
     <LandingFooter />
