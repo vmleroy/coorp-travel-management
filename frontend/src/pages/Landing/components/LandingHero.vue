@@ -2,6 +2,7 @@
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import { TravelHubIcon } from '@/components/icons'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const emit = defineEmits<{
   openLogin: []
@@ -17,6 +18,11 @@ const handleLogin = () => {
     <!-- Background Pattern -->
     <div class="absolute inset-0 opacity-10">
       <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, rgb(99 102 241) 1px, transparent 0); background-size: 40px 40px;"></div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-end">
+      <ThemeToggle />
     </div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
@@ -88,3 +94,5 @@ const handleLogin = () => {
     </div>
   </header>
 </template>
+
+<style scoped></style>

@@ -59,5 +59,6 @@ export function useTheme() {
     isDark,
     setTheme,
     toggleTheme,
+    applyTheme,
   }
 }
