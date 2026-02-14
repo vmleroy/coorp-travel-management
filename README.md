@@ -1,6 +1,30 @@
+
 # Coorp Travel Management
 
 Sistema completo para gerenciamento de viagens corporativas, com backend em Laravel e frontend em Vue 3.
+
+---
+
+## 🔄 Fluxo do Projeto
+
+O fluxo do sistema é composto por dois grandes módulos: **backend** (API e WebSocket) e **frontend** (interface do usuário).
+
+1. **Usuário acessa o frontend** (Vue 3), faz login e interage com a interface.
+2. **Frontend** consome a API REST do backend (Laravel) para autenticação, cadastro, consulta e atualização de ordens de viagem, usuários, etc.
+3. **Ações importantes** (como criação ou alteração de ordens) disparam eventos no backend, que podem gerar notificações.
+4. **Notificações** são enviadas em tempo real para o frontend via WebSocket (Laravel Reverb), exibindo alertas ao usuário.
+5. **Banco de dados** (SQLite por padrão) armazena todas as informações do sistema.
+6. **Administração**: Usuários com papel de admin podem gerenciar usuários, aprovar ou rejeitar ordens, etc.
+
+### Resumo Visual
+
+```
+Usuário ⇄ Frontend (Vue) ⇄ Backend (Laravel API) ⇄ Banco de Dados
+                                 ⇓
+                        WebSocket (Notificações)
+```
+
+Esse fluxo garante uma experiência reativa, com dados sempre atualizados e notificações em tempo real.
 
 ---
 
