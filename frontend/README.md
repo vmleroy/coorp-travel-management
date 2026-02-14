@@ -1,54 +1,79 @@
-# frontend
+# Coorp Travel Management - Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Este projeto é o frontend do sistema Coorp Travel Management, responsável pela interface de usuário para gerenciamento de viagens corporativas.
 
-## Recommended IDE Setup
+## Tecnologias Utilizadas
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- [Vue 3](https://vuejs.org/) + [Vite](https://vitejs.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Pinia](https://pinia.vuejs.org/) para gerenciamento de estado
+- [Vitest](https://vitest.dev/) para testes
+- [ESLint](https://eslint.org/) e [Prettier](https://prettier.io/) para padronização de código
 
-## Recommended Browser Setup
+## Estrutura de Pastas
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- `src/` - Código-fonte principal
+  - `api/` - Serviços de integração com backend
+  - `components/` - Componentes reutilizáveis
+  - `composables/` - Composables Vue (hooks)
+  - `pages/` - Páginas da aplicação
+  - `router/` - Configuração de rotas
+  - `stores/` - Gerenciamento de estado (Pinia)
+  - `utils/` - Utilitários
+- `public/` - Arquivos públicos e estáticos
+- `docker/` - Configuração para container Docker
 
-## Type Support for `.vue` Imports in TS
+## Instalação e Execução
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+1. **Instale as dependências:**
 
 ```sh
 pnpm install
 ```
 
-### Compile and Hot-Reload for Development
+2. **Crie o arquivo de variáveis de ambiente:**
+
+Copie `.env.example` para `.env` e ajuste conforme necessário.
+
+3. **Execute o projeto em modo desenvolvimento:**
 
 ```sh
 pnpm dev
 ```
 
-### Type-Check, Compile and Minify for Production
+4. **Acesse em:**
+
+[http://localhost:5173](http://localhost:5173)
+
+## Scripts Úteis
+
+- `pnpm dev` — Inicia o servidor de desenvolvimento
+- `pnpm build` — Gera build de produção
+- `pnpm preview` — Visualiza build de produção localmente
+- `pnpm test` — Executa os testes unitários
+- `pnpm lint` — Executa o linter
+
+## Testes
+
+Os testes estão localizados em `src/__tests__/`. Utilize `pnpm test` para rodar os testes.
+
+## Docker
+
+Para rodar o frontend em container Docker:
 
 ```sh
-pnpm build
+docker build -t coorp-frontend -f docker/frontend/Dockerfile .
+docker run -p 5173:80 coorp-frontend
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+## Contribuição
 
-```sh
-pnpm test:unit
-```
+1. Faça um fork do projeto
+2. Crie uma branch: `git checkout -b minha-feature`
+3. Commit suas alterações: `git commit -m 'feat: minha nova feature'`
+4. Push para o branch: `git push origin minha-feature`
+5. Abra um Pull Request
 
-### Lint with [ESLint](https://eslint.org/)
+## Licença
 
-```sh
-pnpm lint
-```
+Este projeto está sob a licença MIT.

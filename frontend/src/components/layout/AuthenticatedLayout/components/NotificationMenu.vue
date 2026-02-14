@@ -85,29 +85,29 @@ onMounted(() => {
       <template #item="slotProps">
         <template v-if="slotProps.item.template === 'notification'">
           <div
-            class="flex flex-col px-3 py-2 cursor-pointer hover:bg-primary-50 transition"
+            class="flex flex-col px-3 py-2 cursor-pointer transition hover:bg-primary-50 dark:hover:bg-primary-900/40"
             @click="notificationStore.markAsRead(slotProps.item.notification.id)"
           >
             <div
               class="flex items-center gap-2"
               :class="
                 slotProps.item.notification.read
-                  ? 'text-gray-400'
-                  : 'text-primary-700 font-semibold'
+                  ? 'text-gray-400 dark:text-gray-500'
+                  : 'text-primary-700 font-semibold dark:text-primary-300'
               "
             >
               <i
                 :class="
                   slotProps.item.notification.read
-                    ? 'pi pi-circle text-xs'
-                    : 'pi pi-circle-fill text-primary-500 text-xs'
+                    ? 'pi pi-circle text-xs dark:text-gray-500'
+                    : 'pi pi-circle-fill text-primary-500 text-xs dark:text-primary-300'
                 "
               ></i>
               <span>{{ slotProps.item.notification.message }}</span>
             </div>
             <span
               v-if="slotProps.item.notification.created_at"
-              class="text-xs text-gray-400 mt-0.5"
+              class="text-xs text-gray-400 dark:text-gray-500 mt-0.5"
             >
               {{ formatDate(slotProps.item.notification.created_at) }}
             </span>
@@ -115,7 +115,7 @@ onMounted(() => {
         </template>
         <template v-else-if="slotProps.item.template === 'markAll'">
           <div
-            class="flex items-center gap-2 px-3 py-2 font-semibold cursor-pointer hover:bg-primary-50 transition"
+            class="flex items-center gap-2 px-3 py-2 font-semibold cursor-pointer transition hover:bg-primary-50 dark:hover:bg-primary-900/40 dark:text-primary-50"
             @click="markAllAsRead"
           >
             <i class="pi pi-check"></i>
@@ -123,7 +123,9 @@ onMounted(() => {
           </div>
         </template>
         <template v-else>
-          <span v-if="slotProps.item.label">{{ slotProps.item.label }}</span>
+          <span v-if="slotProps.item.label" class="dark:text-gray-400">{{
+            slotProps.item.label
+          }}</span>
         </template>
       </template>
     </Menu>
