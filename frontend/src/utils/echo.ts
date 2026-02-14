@@ -1,9 +1,13 @@
 import Echo from 'laravel-echo'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, type User } from '@/stores/authStore'
 
 export interface OrderUpdateEvent {
   id: number
   user_id: number
+  user: User
+  destination: string
+  departure_date: string
+  return_date: string
   status: 'pending' | 'approved' | 'rejected' | 'cancelled'
   reason?: string | null
   updated_at: string
@@ -88,26 +92,26 @@ export function subscribeToOrderUpdates(
   }
 }
 
-export function subscribeToAllOrderUpdates(callback: () => void): void {
+export function subscribeToAllOrderUpdates(callback: (data: OrderUpdateEvent) => void): void {
   try {
     const echo = initializeEcho()
     const channelName = 'admin-notifications'
     const channel = echo.channel(channelName)
     console.log(`[Echo] Subscribing to all order updates on channel: ${channelName}`)
 
-    channel.listen('.travel.order.created', (data: unknown) => {
+    channel.listen('.travel.order.created', (data: OrderUpdateEvent) => {
       console.log('[Echo] RECEIVED: travel.order.created', data)
-      callback()
+      callback(data)
     })
 
     channel.listen('.travel-order.deleted', (data: OrderUpdateEvent) => {
       console.log('[Echo] RECEIVED: travel-order.deleted', data)
-      callback()
+      callback(data)
     })
 
     channel.listen('.order.status.changed', (data: OrderUpdateEvent) => {
       console.log('[Echo] RECEIVED: order.status.changed (ADMIN)', data)
-      callback()
+      callback(data)
     })
   } catch (e) {
     console.error('[Echo] Erro ao se inscrever em atualizações de todas os pedidos:', e)

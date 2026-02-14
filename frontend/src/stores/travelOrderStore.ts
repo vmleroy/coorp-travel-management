@@ -4,11 +4,16 @@ import type { TravelOrder, TravelOrderFilters } from '@/api/travelOrder'
 import * as travelOrderApi from '@/api/travelOrder'
 import { subscribeToOrderUpdates, subscribeToAllOrderUpdates } from '@/utils/echo'
 import { useAuthStore } from '@/stores/authStore'
+import { useNotificationStore } from '@/stores/notificationStore'
+import { statusLabel } from '@/utils/formatters'
 
 export const useTravelOrderStore = defineStore('travelOrder', () => {
   const orders = ref<TravelOrder[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  const authStore = useAuthStore()
+  const notificationStore = useNotificationStore()
 
   async function fetchUserOrders(filters?: TravelOrderFilters) {
     loading.value = true
@@ -39,20 +44,27 @@ export const useTravelOrderStore = defineStore('travelOrder', () => {
   }
 
   function listenToUserOrderUpdates() {
-    const authStore = useAuthStore()
     if (!authStore.user?.id) {
       return
     }
 
-    subscribeToOrderUpdates(Number(authStore.user.id), () => {
+    subscribeToOrderUpdates(Number(authStore.user.id), (eventData) => {
+      notificationStore.addNotification({
+        message: `Sua solicitação para ${eventData.destination} - ${eventData.departure_date} a ${eventData.return_date} foi ${statusLabel(eventData.status).toLowerCase()}`,
+        type: 'status_changed',
+      })
       fetchUserOrders()
     })
   }
 
   function listenToAllOrderUpdates() {
-    console.log('Subscribing to all order updates...')
-    subscribeToAllOrderUpdates(() => {
+    const notificationStore = useNotificationStore()
+    subscribeToAllOrderUpdates((eventData) => {
       console.log('Atualização de pedido recebida, atualizando lista...')
+      notificationStore.addNotification({
+        message: `Solicitação de ${eventData.user.name} foi criada.`,
+        type: 'status_changed',
+      })
       fetchAllOrders()
     })
   }

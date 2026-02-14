@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { TravelHubIcon } from '@/components/icons'
 import AuthActionsMenu from './components/AuthActionsMenu.vue'
+import NotificationMenu from './components/NotificationMenu.vue'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { router } from '@/router/router'
 import { useAuthStore } from '@/stores/authStore'
@@ -23,6 +24,7 @@ const handleOnClickLogo = () => {
       </div>
       <div class="flex flex-row items-center justify-center w-fit gap-2">
         <ThemeToggle />
+        <NotificationMenu />
         <AuthActionsMenu />
       </div>
     </div>
