@@ -48,23 +48,22 @@ export const useTravelOrderStore = defineStore('travelOrder', () => {
       return
     }
 
-    subscribeToOrderUpdates(Number(authStore.user.id), (eventData) => {
-      notificationStore.addNotification({
-        message: `Sua solicitação para ${eventData.destination} - ${eventData.departure_date} a ${eventData.return_date} foi ${statusLabel(eventData.status).toLowerCase()}`,
-        type: 'status_changed',
-      })
+    subscribeToOrderUpdates(Number(authStore.user.id), async (eventData) => {
+      await notificationStore.loadNotifications()
+      await notificationStore.updateNotifications(
+        `Sua solicitação para ${eventData.destination} foi ${statusLabel(eventData.status).toLowerCase()}.`,
+      )
       fetchUserOrders()
     })
   }
 
   function listenToAllOrderUpdates() {
     const notificationStore = useNotificationStore()
-    subscribeToAllOrderUpdates((eventData) => {
-      console.log('Atualização de pedido recebida, atualizando lista...')
-      notificationStore.addNotification({
-        message: `Solicitação de ${eventData.user.name} foi criada.`,
-        type: 'status_changed',
-      })
+    subscribeToAllOrderUpdates(async (eventData) => {
+      await notificationStore.loadNotifications()
+      await notificationStore.updateNotifications(
+        `Solicitação de ${eventData.user.name} foi criada.`,
+      )
       fetchAllOrders()
     })
   }

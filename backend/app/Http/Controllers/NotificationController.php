@@ -3,79 +3,57 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\NotificationService;
+use App\Models\User;
 
 class NotificationController extends Controller
 {
-    /**
-     * Get all notifications for the authenticated user
-     */
+    protected $service;
+
+    public function __construct(NotificationService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
-
-        $notifications = $user->notifications()
-            ->paginate($request->get('per_page', 15));
-
-        return response()->json($notifications);
+        $notifications = $this->service->getUserNotifications($user->id, 10);
+        return response()->json([
+            'data' => $notifications,
+        ]);
     }
 
-    /**
-     * Get unread notifications for the authenticated user
-     */
-    public function unread(Request $request)
+    public function markAsRead(Request $request)
     {
-        $user = $request->user();
-
-        $notifications = $user->unreadNotifications()
-            ->paginate($request->get('per_page', 15));
-
-        return response()->json($notifications);
+        $id = urldecode($request->route('id'));
+        $this->service->markAsRead($id);
+        return response()->json(['message' => 'Notificações marcadas como lidas']);
     }
 
-    /**
-     * Mark a specific notification as read
-     */
-    public function markAsRead(Request $request, string $id)
-    {
-        $user = $request->user();
-
-        $notification = $user->notifications()->find($id);
-
-        if (!$notification) {
-            return response()->json(['message' => 'Notification not found'], 404);
-        }
-
-        $notification->markAsRead();
-
-        return response()->json(['message' => 'Notification marked as read']);
-    }
-
-    /**
-     * Mark all notifications as read
-     */
     public function markAllAsRead(Request $request)
     {
         $user = $request->user();
-        $user->unreadNotifications->markAsRead();
-
-        return response()->json(['message' => 'All notifications marked as read']);
+        $this->service->markAllAsRead($user->id);
+        return response()->json(['message' => 'Todas as notificações marcadas como lidas']);
     }
 
-    /**
-     * Delete a specific notification
-     */
-    public function destroy(Request $request, string $id)
+    public function updateMessage(Request $request)
     {
-        $user = $request->user();
-
-        $notification = $user->notifications()->find($id);
-
-        if (!$notification) {
-            return response()->json(['message' => 'Notification not found'], 404);
+        $id = urldecode($request->route('id'));
+        $message = $request->input('message');
+        if (!$message) {
+            return response()->json(['message' => 'Descrição é obrigatória'], 422);
         }
 
-        $notification->delete();
+        $notification = $this->service->updateMessage($id, $message);
+        if (!$notification) {
+            return response()->json(['message' => 'Notificação não encontrada'], 404);
+        }
 
-        return response()->json(['message' => 'Notification deleted']);
+        return response()->json([
+            'message' => 'Descrição atualizada com sucesso',
+            'data' => $notification,
+        ]);
     }
 }

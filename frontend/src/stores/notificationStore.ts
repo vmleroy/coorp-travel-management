@@ -1,14 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { TravelOrder } from '@/api/travelOrder'
+import {
+  fetchNotifications,
+  markNotificationsAsRead,
+  markAllNotificationsAsRead,
+  addMessageToNotification,
+} from '@/api/notification'
 
 export interface Notification {
   id: string
   message: string
-  timestamp: Date
   read: boolean
-  order?: TravelOrder
-  type: 'status_changed' | 'order_created'
+  created_at: string
+  type: string
+  // outros campos opcionais
 }
 
 export const useNotificationStore = defineStore('notification', () => {
@@ -19,35 +24,41 @@ export const useNotificationStore = defineStore('notification', () => {
   })
 
   const recentNotifications = computed(() => {
-    return notifications.value.slice(0, 5)
+    return notifications.value.filter((n) => !n.read).slice(0, 5)
   })
 
-  function addNotification(notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) {
-    const newNotification: Notification = {
-      ...notification,
-      id: `${Date.now()}-${Math.random()}`,
-      timestamp: new Date(),
-      read: false,
-    }
-    notifications.value.unshift(newNotification)
-
-    // Manter apenas as 50 notificações mais recentes
-    if (notifications.value.length > 50) {
-      notifications.value = notifications.value.slice(0, 50)
-    }
+  async function loadNotifications() {
+    const apiNotifications = await fetchNotifications()
+    notifications.value = apiNotifications
   }
 
-  function markAsRead(id: string) {
-    const notification = notifications.value.find((n) => n.id === id)
+  async function updateNotifications(message: string) {
+    const notification = notifications.value[0]
     if (notification) {
-      notification.read = true
+      notification.message = message
+      await addMessageToNotification(notification.id, message)
     }
   }
 
-  function markAllAsRead() {
-    notifications.value.forEach((n) => {
-      n.read = true
-    })
+  async function markAsRead(id: string) {
+    const notification = notifications.value.find((n) => n.id === id)
+    if (notification && !notification.read) {
+      try {
+        await markNotificationsAsRead(id)
+      } catch {
+      } finally {
+        notification.read = true
+      }
+    }
+  }
+
+  async function markAllAsRead() {
+    try {
+      await markAllNotificationsAsRead()
+    } catch {
+    } finally {
+      clearNotifications()
+    }
   }
 
   function clearNotifications() {
@@ -58,9 +69,10 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications,
     unreadCount,
     recentNotifications,
-    addNotification,
     markAsRead,
     markAllAsRead,
     clearNotifications,
+    loadNotifications,
+    updateNotifications,
   }
 })
