@@ -72,9 +72,21 @@ class TravelOrderController extends Controller
     /**
      * Display a listing of all resources.
      */
-    public function showAll()
+    public function showAll(Request $request)
     {
-        $result = $this->travelOrderService->getAll();
+        $filters = $request->only([
+            'status',
+            'destination',
+            'user_id',
+            'departure_date_from',
+            'departure_date_to',
+            'return_date_from',
+            'return_date_to',
+            'page',
+            'per_page',
+        ]);
+
+        $result = $this->travelOrderService->getAll($filters);
 
         return response()->json([
             'success' => true,
@@ -104,7 +116,19 @@ class TravelOrderController extends Controller
         }
 
         $userId = $request->user()->id;
-        $result = $this->travelOrderService->getByUserId($userId);
+
+        $filters = $request->only([
+            'status',
+            'destination',
+            'departure_date_from',
+            'departure_date_to',
+            'return_date_from',
+            'return_date_to',
+            'page',
+            'per_page',
+        ]);
+
+        $result = $this->travelOrderService->getByUserId($userId, $filters);
 
         return response()->json([
             'success' => true,

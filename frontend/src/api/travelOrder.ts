@@ -25,6 +25,8 @@ export interface TravelOrderFilters {
   per_page?: number
   departure_date_from?: string
   departure_date_to?: string
+  return_date_from?: string
+  return_date_to?: string
 }
 
 export async function getUserTravelOrders(filters?: TravelOrderFilters) {

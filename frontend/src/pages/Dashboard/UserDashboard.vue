@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useTravelOrderStore } from '@/stores/travelOrderStore'
-import { createTravelOrder, cancelTravelOrder } from '@/api/travelOrder'
+import {
+  createTravelOrder,
+  cancelTravelOrder,
+  type TravelOrder,
+  type TravelOrderFilters,
+} from '@/api/travelOrder'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -10,9 +15,14 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import Tag from 'primevue/tag'
-
-import type { TravelOrder } from '@/api/travelOrder'
 import { getErrorMessage } from '@/utils/errorHandler'
+import {
+  formatDateToString,
+  formatDate,
+  statusLabel,
+  statusSeverity,
+  getTodayAtMidnight,
+} from '@/utils/formatters'
 
 interface TravelOrderForm {
   destination: string
@@ -24,8 +34,6 @@ interface DateRange extends Array<Date | null> {
   0: Date | null
   1: Date | null
 }
-
-const dateRange = ref<DateRange | null>(null)
 
 const travelOrderStore = useTravelOrderStore()
 
@@ -41,6 +49,8 @@ const statusOptions = [
 ]
 const statusFilter = ref('')
 const destinationFilter = ref('')
+const departureDateRange = ref<DateRange | null>(null)
+const returnDateRange = ref<DateRange | null>(null)
 
 const form = ref<TravelOrderForm>({
   destination: '',
@@ -49,55 +59,42 @@ const form = ref<TravelOrderForm>({
 })
 
 const errorMessage = ref('')
-
-function statusLabel(status: string) {
-  switch (status) {
-    case 'pending':
-      return 'Pendente'
-    case 'approved':
-      return 'Aprovado'
-    case 'rejected':
-      return 'Rejeitado'
-    case 'cancelled':
-      return 'Cancelado'
-    default:
-      return status
-  }
-}
-
-function statusSeverity(status: string) {
-  switch (status) {
-    case 'pending':
-      return 'warning'
-    case 'approved':
-      return 'success'
-    case 'rejected':
-      return 'danger'
-    case 'cancelled':
-      return 'info'
-    default:
-      return ''
-  }
-}
+const minDate = getTodayAtMidnight()
 
 function applyFilters() {
-  travelOrderStore.fetchUserOrders({
-    status: statusFilter.value || undefined,
-    destination: destinationFilter.value || undefined,
-    departure_date_from: dateRange.value?.[0]
-      ? dateRange.value[0].toISOString().slice(0, 10)
-      : undefined,
-    departure_date_to: dateRange.value?.[1]
-      ? dateRange.value[1].toISOString().slice(0, 10)
-      : undefined,
-  })
+  const filters: TravelOrderFilters = {}
+
+  if (statusFilter.value) {
+    filters.status = statusFilter.value
+  }
+
+  if (destinationFilter.value) {
+    filters.destination = destinationFilter.value
+  }
+
+  if (departureDateRange.value?.[0]) {
+    filters.departure_date_from = formatDateToString(departureDateRange.value[0])
+    filters.departure_date_to = departureDateRange.value[1]
+      ? formatDateToString(departureDateRange.value[1])
+      : formatDateToString(departureDateRange.value[0])
+  }
+
+  if (returnDateRange.value?.[0]) {
+    filters.return_date_from = formatDateToString(returnDateRange.value[0])
+    filters.return_date_to = returnDateRange.value[1]
+      ? formatDateToString(returnDateRange.value[1])
+      : formatDateToString(returnDateRange.value[0])
+  }
+
+  travelOrderStore.fetchUserOrders(filters)
 }
 
 function clearFilters() {
   statusFilter.value = ''
   destinationFilter.value = ''
-  dateRange.value = null
-  applyFilters()
+  departureDateRange.value = null
+  returnDateRange.value = null
+  travelOrderStore.fetchUserOrders()
 }
 
 async function submitCreate() {
@@ -106,8 +103,8 @@ async function submitCreate() {
   try {
     await createTravelOrder({
       destination: form.value.destination,
-      departure_date: form.value.departure_date?.toISOString().slice(0, 10),
-      return_date: form.value.return_date?.toISOString().slice(0, 10),
+      departure_date: form.value.departure_date ? formatDateToString(form.value.departure_date) : undefined,
+      return_date: form.value.return_date ? formatDateToString(form.value.return_date) : undefined,
     })
     showCreateDialog.value = false
     form.value.destination = ''
@@ -129,8 +126,6 @@ async function cancelOrder(order: TravelOrder) {
     getErrorMessage(e)
   }
 }
-
-watch([statusFilter, destinationFilter, dateRange], applyFilters)
 
 // Inicial
 travelOrderStore.fetchUserOrders()
@@ -159,10 +154,17 @@ travelOrderStore.listenToUserOrderUpdates()
       />
       <InputText v-model="destinationFilter" placeholder="Destino" class="w-48" />
       <DatePicker
-        v-model="dateRange"
+        v-model="departureDateRange"
         selectionMode="range"
         dateFormat="dd/mm/yy"
-        placeholder="Período"
+        placeholder="Período de Partida"
+        class="w-56"
+      />
+      <DatePicker
+        v-model="returnDateRange"
+        selectionMode="range"
+        dateFormat="dd/mm/yy"
+        placeholder="Período de Retorno"
         class="w-56"
       />
       <Button label="Filtrar" icon="pi pi-filter" @click="applyFilters" outlined />
@@ -176,8 +178,16 @@ travelOrderStore.listenToUserOrderUpdates()
       responsiveLayout="scroll"
     >
       <Column field="destination" header="Destino" />
-      <Column field="departure_date" header="Partida" />
-      <Column field="return_date" header="Retorno" />
+      <Column field="departure_date" header="Partida">
+        <template #body="{ data }">
+          {{ formatDate(data.departure_date) }}
+        </template>
+      </Column>
+      <Column field="return_date" header="Retorno">
+        <template #body="{ data }">
+          {{ formatDate(data.return_date) }}
+        </template>
+      </Column>
       <Column field="status" header="Status">
         <template #body="{ data }">
           <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
@@ -211,11 +221,23 @@ travelOrderStore.listenToUserOrderUpdates()
         </div>
         <div class="mb-4">
           <label class="block mb-1 font-medium">Data de Partida</label>
-          <DatePicker v-model="form.departure_date" dateFormat="dd/mm/yy" required class="w-full" />
+          <DatePicker
+            v-model="form.departure_date"
+            dateFormat="dd/mm/yy"
+            :minDate="minDate"
+            required
+            class="w-full"
+          />
         </div>
         <div class="mb-4">
           <label class="block mb-1 font-medium">Data de Retorno</label>
-          <DatePicker v-model="form.return_date" dateFormat="dd/mm/yy" required class="w-full" />
+          <DatePicker
+            v-model="form.return_date"
+            dateFormat="dd/mm/yy"
+            :minDate="form.departure_date || minDate"
+            required
+            class="w-full"
+          />
         </div>
         <div class="flex justify-end gap-2">
           <Button label="Cancelar" text @click="showCreateDialog = false" type="button" />

@@ -25,7 +25,6 @@ export const useTravelOrderStore = defineStore('travelOrder', () => {
   }
 
   async function fetchAllOrders(filters?: TravelOrderFilters) {
-    console.log('Fetching all orders with filters:', filters)
     loading.value = true
     error.value = null
     try {

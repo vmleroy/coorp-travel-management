@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Input from 'primevue/inputtext'
+
 defineProps({
   modelValue: { type: [String, Number], default: '' },
   label: { type: String, default: '' },
@@ -16,14 +18,14 @@ const emit = defineEmits(['update:modelValue'])
 <template>
   <div class="flex flex-col gap-2">
     <label v-if="label" :for="id" class="font-semibold">{{ label }}</label>
-    <input
+    <Input
       :id="id"
       :type="type"
       :placeholder="placeholder"
       :value="modelValue"
       @input="emit('update:modelValue', ($event.target as HTMLInputElement)?.value)"
       :required="required"
-      class="w-full border rounded-md px-4 py-2 text-base bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-indigo-600 focus:ring-0"
+      class="w-full"
       :class="invalid ? 'border-red-500' : 'border-gray-300 dark:border-zinc-700'"
     />
     <small v-if="error" class="text-red-500">{{ error }}</small>

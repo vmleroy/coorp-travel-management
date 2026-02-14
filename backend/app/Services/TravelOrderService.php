@@ -143,6 +143,10 @@ class TravelOrderService
 
     private function applyFilters(Builder $query, array $filters)
     {
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
         if (!empty($filters['status'])) {
             $status = $filters['status'];
             if (is_array($status)) {
