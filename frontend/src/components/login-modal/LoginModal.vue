@@ -5,9 +5,15 @@ import Message from 'primevue/message'
 import { Input } from '@/components/input'
 import { Password } from '@/components/password'
 import { Button } from '@/components/button'
+import { useLogin, useRegister } from '@/composables/useAuthQueries'
+import { getErrorMessage } from '@/utils/errorHandler'
 
 const props = defineProps<{ visible: boolean; mode?: 'login' | 'register' }>()
-const emit = defineEmits<{ 'update:visible': [value: boolean]; 'update:mode': [value: 'login' | 'register']; 'login-success': [] }>()
+const emit = defineEmits<{
+  'update:visible': [value: boolean]
+  'update:mode': [value: 'login' | 'register']
+  'login-success': []
+}>()
 
 const isVisible = computed({
   get: () => props.visible,
@@ -18,65 +24,108 @@ const mode = computed({
   get: () => props.mode ?? 'login',
   set: (value) => emit('update:mode', value),
 })
+
 const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const loading = ref(false)
 const errorMessage = ref('')
 const errors = ref<{ name?: string; email?: string; password?: string; confirmPassword?: string }>(
   {},
 )
+
+const loginMutation = useLogin()
+const registerMutation = useRegister()
+
+const isLoading = computed(() => loginMutation.isPending.value || registerMutation.isPending.value)
+
+const validateLogin = (): boolean => {
+  const validations = [
+    { field: 'email', value: email.value, message: 'E-mail é obrigatório' },
+    { field: 'password', value: password.value, message: 'Senha é obrigatória' },
+  ]
+
+  return validateFields(validations)
+}
+
+const validateRegister = (): boolean => {
+  const validations = [
+    { field: 'name', value: name.value, message: 'Nome é obrigatório' },
+    { field: 'email', value: email.value, message: 'E-mail é obrigatório' },
+    { field: 'password', value: password.value, message: 'Senha é obrigatória' },
+    { field: 'confirmPassword', value: confirmPassword.value, message: 'Confirme sua senha' },
+  ]
+
+  if (!validateFields(validations)) return false
+
+  if (password.value !== confirmPassword.value) {
+    errors.value.confirmPassword = 'As senhas não coincidem'
+    return false
+  }
+
+  return true
+}
+
+const validateFields = (
+  validations: Array<{ field: string; value: string; message: string }>,
+): boolean => {
+  errors.value = {}
+
+  for (const { field, value, message } of validations) {
+    if (!value) {
+      errors.value[field as keyof typeof errors.value] = message
+      return false
+    }
+  }
+
+  return true
+}
+
+const handleApiError = (error: unknown): void => {
+  errorMessage.value = getErrorMessage(error)
+}
+
+const resetForm = (): void => {
+  name.value = ''
+  email.value = ''
+  password.value = ''
+  confirmPassword.value = ''
+  errors.value = {}
+  errorMessage.value = ''
+}
 
 const handleSubmit = async () => {
   errors.value = {}
   errorMessage.value = ''
 
   if (mode.value === 'login') {
-    if (!email.value) {
-      errors.value.email = 'E-mail é obrigatório'
-      return
-    }
-    if (!password.value) {
-      errors.value.password = 'Senha é obrigatória'
-      return
+    if (!validateLogin()) return
+
+    try {
+      await loginMutation.mutateAsync({ email: email.value, password: password.value })
+      emit('login-success')
+      isVisible.value = false
+      resetForm()
+    } catch (error) {
+      handleApiError(error)
     }
   } else {
-    if (!name.value) {
-      errors.value.name = 'Nome é obrigatório'
-      return
-    }
-    if (!email.value) {
-      errors.value.email = 'E-mail é obrigatório'
-      return
-    }
-    if (!password.value) {
-      errors.value.password = 'Senha é obrigatória'
-      return
-    }
-    if (!confirmPassword.value) {
-      errors.value.confirmPassword = 'Confirme sua senha'
-      return
-    }
-    if (password.value !== confirmPassword.value) {
-      errors.value.confirmPassword = 'As senhas não coincidem'
-      return
-    }
-  }
+    if (!validateRegister()) return
 
-  loading.value = true
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    emit('login-success')
-    isVisible.value = false
-    name.value = ''
-    email.value = ''
-    password.value = ''
-    confirmPassword.value = ''
-  } catch {
-    errorMessage.value = 'Erro ao processar. Tente novamente.'
-  } finally {
-    loading.value = false
+    try {
+      await registerMutation.mutateAsync({
+        name: name.value,
+        email: email.value,
+        password: password.value,
+        password_confirmation: confirmPassword.value,
+        role: 'admin',
+      })
+      emit('login-success')
+      isVisible.value = false
+      resetForm()
+    } catch (error) {
+      handleApiError(error)
+    }
   }
 }
 </script>
@@ -137,7 +186,7 @@ const handleSubmit = async () => {
       <Button
         type="submit"
         :label="mode === 'login' ? 'Entrar' : 'Registrar'"
-        :loading="loading"
+        :loading="isLoading"
         class="w-full"
       />
       <div class="text-center mt-2">

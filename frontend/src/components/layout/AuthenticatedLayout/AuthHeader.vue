@@ -1,0 +1,20 @@
+<script setup lang="ts">
+import { TravelHubIcon } from '@/components/icons'
+import AuthActionsMenu from './components/AuthActionsMenu.vue'
+import { ThemeToggle } from '@/components/theme-toggle'
+</script>
+
+<template>
+  <header class="border-b py-6 px-6" style="border-color: var(--color-border)">
+    <div class="w-full flex items-center justify-between">
+      <div class="flex items-center">
+        <TravelHubIcon :size="32" class="stroke-brand-icon" />
+        <span class="text-2xl font-bold" style="color: var(--color-foreground)">TravelHub</span>
+      </div>
+      <div class="flex flex-row items-center justify-center w-fit gap-2">
+        <ThemeToggle />
+        <AuthActionsMenu />
+      </div>
+    </div>
+  </header>
+</template>

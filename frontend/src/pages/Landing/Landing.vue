@@ -3,11 +3,13 @@ defineOptions({
   name: 'LandingPage',
 })
 import { ref } from 'vue'
-import { ThemeToggle } from '@/components'
+import { useRouter } from 'vue-router'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { LandingHero, LandingFeatures, LandingFooter } from './components'
 import { Button } from '@/components/button'
 import { LoginModal } from '@/components/login-modal'
 
+const router = useRouter()
 const isLoginModalVisible = ref(false)
 const loginModalMode = ref<'login' | 'register'>('login')
 
@@ -21,9 +23,9 @@ const openRegisterModal = () => {
   isLoginModalVisible.value = true
 }
 
-const handleLoginSuccess = () => {
-  // TODO: Navigate to dashboard
-  console.log('Login successful!')
+const handleLoginSuccess = async () => {
+  isLoginModalVisible.value = false
+  await router.push({ name: 'dashboard' })
 }
 </script>
 
@@ -31,13 +33,7 @@ const handleLoginSuccess = () => {
   <div class="relative w-full h-full p-4">
     <!-- Theme Toggle -->
     <div class="relative w-full flex justify-end items-center gap-2 top-0">
-      <Button
-        label="Entrar"
-        icon="pi-sign-in"
-        color="indigo"
-        size="md"
-        @click="openLoginModal"
-      />
+      <Button label="Entrar" icon="pi-sign-in" color="indigo" size="md" @click="openLoginModal" />
       <ThemeToggle />
     </div>
 
@@ -45,6 +41,10 @@ const handleLoginSuccess = () => {
     <LandingFeatures />
     <LandingFooter />
 
-    <LoginModal v-model:visible="isLoginModalVisible" v-model:mode="loginModalMode" @login-success="handleLoginSuccess" />
+    <LoginModal
+      v-model:visible="isLoginModalVisible"
+      v-model:mode="loginModalMode"
+      @login-success="handleLoginSuccess"
+    />
   </div>
 </template>
