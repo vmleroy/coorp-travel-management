@@ -4,12 +4,20 @@ defineOptions({
 })
 import { ref } from 'vue'
 import { ThemeToggle } from '@/components'
-import { LandingHero, LandingFeatures, LandingFooter, LoginModal } from './components'
-import AppButton from '@/components/AppButton.vue'
+import { LandingHero, LandingFeatures, LandingFooter } from './components'
+import { Button } from '@/components/button'
+import { LoginModal } from '@/components/login-modal'
 
 const isLoginModalVisible = ref(false)
+const loginModalMode = ref<'login' | 'register'>('login')
 
 const openLoginModal = () => {
+  loginModalMode.value = 'login'
+  isLoginModalVisible.value = true
+}
+
+const openRegisterModal = () => {
+  loginModalMode.value = 'register'
   isLoginModalVisible.value = true
 }
 
@@ -23,7 +31,7 @@ const handleLoginSuccess = () => {
   <div class="relative w-full h-full p-4">
     <!-- Theme Toggle -->
     <div class="relative w-full flex justify-end items-center gap-2 top-0">
-      <AppButton
+      <Button
         label="Entrar"
         icon="pi-sign-in"
         color="indigo"
@@ -33,10 +41,10 @@ const handleLoginSuccess = () => {
       <ThemeToggle />
     </div>
 
-    <LandingHero @open-login="openLoginModal" />
+    <LandingHero @open-login="openRegisterModal" />
     <LandingFeatures />
     <LandingFooter />
 
-    <LoginModal v-model:visible="isLoginModalVisible" @login-success="handleLoginSuccess" />
+    <LoginModal v-model:visible="isLoginModalVisible" v-model:mode="loginModalMode" @login-success="handleLoginSuccess" />
   </div>
 </template>

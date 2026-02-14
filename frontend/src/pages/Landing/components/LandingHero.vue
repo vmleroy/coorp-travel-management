@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppButton from '@/components/AppButton.vue'
+import { Button } from '@/components/button'
 import { TravelHubIcon } from '@/components/icons'
 
 const emit = defineEmits<{
@@ -39,12 +39,7 @@ const handleLogin = () => {
 
     <!-- CTA Buttons -->
     <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-      <AppButton
-        label="Começar agora"
-        size="lg"
-        color="indigo"
-        @click="handleLogin"
-      />
+      <Button label="Começar agora" size="lg" color="indigo" @click="handleLogin" />
     </div>
 
     <!-- Stats -->

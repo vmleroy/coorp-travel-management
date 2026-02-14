@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// No imports needed - usando divs customizadas
 </script>
 
 <template>

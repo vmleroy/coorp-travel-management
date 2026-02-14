@@ -22,12 +22,17 @@ const sizeMap: Record<string, string> = {
   lg: 'px-6 py-3 text-lg',
 }
 
-const baseClass = 'rounded-md font-medium border-0 transition-colors disabled:opacity-60 disabled:pointer-events-none flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed';
+const baseClass =
+  'rounded-md font-medium border-0 transition-colors disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed'
 </script>
 
 <template>
   <button
-    :class="[baseClass, colorMap[props.color] ?? colorMap.indigo, sizeMap[props.size] ?? sizeMap.md]"
+    :class="[
+      baseClass,
+      colorMap[props.color] ?? colorMap.indigo,
+      sizeMap[props.size] ?? sizeMap.md,
+    ]"
     :disabled="props.disabled || props.loading"
     @click="emit('click')"
     type="button"
