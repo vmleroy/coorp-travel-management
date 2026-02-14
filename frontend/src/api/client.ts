@@ -16,7 +16,11 @@ apiClient.interceptors.request.use(
     const authStore = useAuthStore()
     if (authStore.token) {
       config.headers.Authorization = `Bearer ${authStore.token}`
+      console.log('🔐 Authorization header set:', `Bearer ${authStore.token.substring(0, 20)}...`)
+    } else {
+      console.warn('⚠️ No token found in auth store')
     }
+    console.log('📤 Request to:', config.url, 'with params:', config.params)
     return config
   },
   (error) => {

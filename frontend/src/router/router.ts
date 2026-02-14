@@ -3,6 +3,7 @@ import { setupAuthGuard } from './guards'
 
 import { LandingPage } from '@/pages/Landing'
 import { UserProfile } from '@/pages/UserProfile'
+import { DashboardPage } from '@/pages/Dashboard'
 
 const routes = [
   {
@@ -19,7 +20,7 @@ const routes = [
   {
     path: '/dashboard',
     name: 'dashboard',
-    component: UserProfile,
+    component: DashboardPage,
     meta: { requiresAuth: true },
   },
 ]
