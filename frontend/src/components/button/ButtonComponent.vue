@@ -40,7 +40,7 @@ const sizeMap: Record<string, string> = {
 const variantMap: Record<string, string> = {
   default: '',
   ghosted:
-    'bg-transparent hover:bg-gray-800 dark:hover:bg-gray-100 text-gray-700 dark:text-gray-200 border border-transparent hover:border-gray-800 dark:hover:border-gray-100 active:scale-90',
+    'bg-transparent text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white active:scale-90 focus-visible:ring-2 focus-visible:ring-primary-500',
 }
 
 const textColorMap: Record<string, string> = {
