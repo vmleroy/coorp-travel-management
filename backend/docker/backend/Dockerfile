@@ -33,6 +33,11 @@ RUN npm run build
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache
 
+# Add entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Expose port
 EXPOSE 8000
 
