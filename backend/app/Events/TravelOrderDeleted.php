@@ -5,11 +5,12 @@ namespace App\Events;
 use App\Models\TravelOrder;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TravelOrderDeleted implements ShouldBroadcast
+class TravelOrderDeleted implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,8 +25,8 @@ class TravelOrderDeleted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('admin-notifications'),
-            new Channel('user.' . $this->travelOrder->user_id),
+            new Channel('admin-notifications'), // Para os admins
+            new PrivateChannel('notifications.' . $this->travelOrder->user_id), // Para o usuário
         ];
     }
 

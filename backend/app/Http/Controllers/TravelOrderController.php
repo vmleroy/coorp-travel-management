@@ -20,6 +20,8 @@ class TravelOrderController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('🔷 TravelOrderController.store() called');
+
         $requestedData = $request->validate([
             'destination' => 'required|string|max:255',
             'departure_date' => 'required|date',
@@ -33,6 +35,8 @@ class TravelOrderController extends Controller
             'return_date.date' => 'A data de retorno deve ser uma data válida.',
             'return_date.after_or_equal' => 'A data de retorno deve ser igual ou posterior à data de partida.',
         ]);
+
+        \Log::info('✅ Validation passed', ['data' => $requestedData]);
 
         $requestedData['user_id'] = $request->user()->id;
 
@@ -86,6 +90,19 @@ class TravelOrderController extends Controller
      */
     public function showAllByUser(Request $request)
     {
+        \Log::info('showAllByUser called', [
+            'user' => $request->user(),
+            'auth_header' => $request->header('Authorization'),
+            'cookies' => $request->cookies->all(),
+        ]);
+
+        if (!$request->user()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuário não autenticado',
+            ], 401);
+        }
+
         $userId = $request->user()->id;
         $result = $this->travelOrderService->getByUserId($userId);
 

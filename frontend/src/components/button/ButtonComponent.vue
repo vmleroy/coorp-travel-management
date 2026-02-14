@@ -9,7 +9,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
   variant: { type: String, default: undefined },
-  type: { type: String, default: 'button' },
+  type: { type: String as () => 'button' | 'submit' | 'reset', default: 'button' },
   severity: { type: String, default: 'indigo' },
   text: { type: Boolean, default: false },
   outlined: { type: Boolean, default: false },

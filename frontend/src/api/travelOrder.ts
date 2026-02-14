@@ -29,28 +29,20 @@ export interface TravelOrderFilters {
 
 export async function getUserTravelOrders(filters?: TravelOrderFilters) {
   try {
-    console.log('📡 Fetching user orders with filters:', filters)
     const response = await apiClient.get('/travel-orders/user', { params: filters })
-    console.log('✅ API Response (user):', response.data)
     const orders = response.data.data.travel_orders as TravelOrder[]
-    console.log(`📊 Total orders fetched: ${orders.length}`)
     return orders
   } catch (error) {
-    console.error('❌ Error fetching user orders:', error)
     throw error
   }
 }
 
 export async function getAllTravelOrders(filters?: TravelOrderFilters) {
   try {
-    console.log('📡 Fetching all orders with filters:', filters)
     const response = await apiClient.get('/travel-orders', { params: filters })
-    console.log('✅ API Response (all):', response.data)
     const orders = response.data.data.travel_orders as TravelOrder[]
-    console.log(`📊 Total orders fetched: ${orders.length}`)
     return orders
   } catch (error) {
-    console.error('❌ Error fetching all orders:', error)
     throw error
   }
 }

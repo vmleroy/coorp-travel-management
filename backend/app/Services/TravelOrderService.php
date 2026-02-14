@@ -26,7 +26,6 @@ class TravelOrderService
         ]);
 
         TravelOrderCreated::dispatch($travelOrder);
-
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new NewTravelOrderForAdmin($travelOrder));

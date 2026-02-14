@@ -29,8 +29,9 @@ test('event broadcasts on correct private channel', function () {
     $event = new OrderStatusChanged($order, 'pending');
     $channels = $event->broadcastOn();
 
-    expect($channels)->toHaveCount(1)
-        ->and($channels[0]->name)->toBe("private-notifications.{$user->id}");
+        expect($channels)->toHaveCount(2)
+            ->and($channels[0]->name)->toBe("private-notifications.{$user->id}")
+            ->and($channels[1]->name)->toBe('admin-notifications');
 });
 
 test('event broadcast data contains correct information', function () {
@@ -123,7 +124,7 @@ test('event is not dispatched when cancel fails', function () {
     ]);
 
     $service = app(\App\Services\TravelOrderService::class);
-    
+
     try {
         $service->cancel($order->id);
     } catch (\Exception $e) {

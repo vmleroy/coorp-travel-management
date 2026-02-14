@@ -191,6 +191,7 @@ watch([statusFilter, destinationFilter, userFilter, dateRange], applyFilters)
 // Inicial
 fetchUsers()
 travelOrderStore.fetchAllOrders()
+travelOrderStore.listenToAllOrderUpdates()
 </script>
 
 <template>

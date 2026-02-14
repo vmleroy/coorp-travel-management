@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { TravelOrder, TravelOrderFilters } from '@/api/travelOrder'
 import * as travelOrderApi from '@/api/travelOrder'
+import { subscribeToOrderUpdates, subscribeToAllOrderUpdates } from '@/utils/echo'
+import { useAuthStore } from '@/stores/authStore'
 
 export const useTravelOrderStore = defineStore('travelOrder', () => {
   const orders = ref<TravelOrder[]>([])
@@ -13,10 +15,8 @@ export const useTravelOrderStore = defineStore('travelOrder', () => {
     error.value = null
     try {
       const data = await travelOrderApi.getUserTravelOrders(filters)
-      console.log('✅ UserOrders fetched:', data)
       orders.value = data
     } catch (e) {
-      console.error('❌ Error fetching user orders:', e)
       error.value = 'Erro ao buscar solicitações.'
       throw e
     } finally {
@@ -25,19 +25,37 @@ export const useTravelOrderStore = defineStore('travelOrder', () => {
   }
 
   async function fetchAllOrders(filters?: TravelOrderFilters) {
+    console.log('Fetching all orders with filters:', filters)
     loading.value = true
     error.value = null
     try {
       const data = await travelOrderApi.getAllTravelOrders(filters)
-      console.log('✅ AllOrders fetched:', data)
       orders.value = data
     } catch (e) {
-      console.error('❌ Error fetching all orders:', e)
       error.value = 'Erro ao buscar todas solicitações.'
       throw e
     } finally {
       loading.value = false
     }
+  }
+
+  function listenToUserOrderUpdates() {
+    const authStore = useAuthStore()
+    if (!authStore.user?.id) {
+      return
+    }
+
+    subscribeToOrderUpdates(Number(authStore.user.id), () => {
+      fetchUserOrders()
+    })
+  }
+
+  function listenToAllOrderUpdates() {
+    console.log('Subscribing to all order updates...')
+    subscribeToAllOrderUpdates(() => {
+      console.log('Atualização de pedido recebida, atualizando lista...')
+      fetchAllOrders()
+    })
   }
 
   return {
@@ -46,5 +64,7 @@ export const useTravelOrderStore = defineStore('travelOrder', () => {
     error,
     fetchUserOrders,
     fetchAllOrders,
+    listenToUserOrderUpdates,
+    listenToAllOrderUpdates,
   }
 })

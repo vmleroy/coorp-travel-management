@@ -15,7 +15,7 @@ Route::get('/health', function () {
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
-// Broadcasting authentication
+// Broadcasting authentication - must be outside api group to avoid path issues
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 // Protected routes

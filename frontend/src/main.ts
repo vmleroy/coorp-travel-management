@@ -9,6 +9,14 @@ import { router } from './router/router.ts'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import { VueQueryPlugin } from '@tanstack/vue-query'
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
+
+// Make Pusher available globally for Echo
+window.Pusher = Pusher
+
+// Make Echo available globally
+window.Echo = Echo
 
 const app = createApp(App)
 

@@ -26,8 +26,8 @@ test('event broadcasts on admin notifications channel', function () {
     $event = new TravelOrderCreated($order);
     $channels = $event->broadcastOn();
 
-    expect($channels)->toHaveCount(1)
-        ->and($channels[0]->name)->toBe('private-admin-notifications');
+        expect($channels)->toHaveCount(1)
+            ->and($channels[0]->name)->toBe('admin-notifications');
 });
 
 test('event broadcast data contains order and user information', function () {

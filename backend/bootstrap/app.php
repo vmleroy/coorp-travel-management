@@ -17,8 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->trustProxies(at: '*');
 
+        // Apply CORS middleware FIRST to all requests
+        $middleware->prepend(\App\Http\Middleware\CorsMiddleware::class);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckUserRole::class,
+            'cors' => \App\Http\Middleware\CorsMiddleware::class,
         ]);
 
         // Disable redirect to login for API routes
