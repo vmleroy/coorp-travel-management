@@ -3,6 +3,9 @@ import { TravelHubIcon } from '@/components/icons'
 import AuthActionsMenu from './components/AuthActionsMenu.vue'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { router } from '@/router/router'
+import { useAuthStore } from '@/stores/authStore'
+
+const authStore = useAuthStore()
 
 const handleOnClickLogo = () => {
   router.push('/dashboard') // Redireciona para a página inicial
@@ -14,7 +17,9 @@ const handleOnClickLogo = () => {
     <div class="w-full flex items-center justify-between">
       <div class="flex items-center cursor-pointer hover:opacity-80" @click="handleOnClickLogo">
         <TravelHubIcon :size="32" class="stroke-brand-icon" />
-        <span class="text-2xl font-bold" style="color: var(--color-foreground)">TravelHub</span>
+        <span class="text-2xl font-bold" style="color: var(--color-foreground)"
+          >TravelHub - {{ authStore.user?.role === 'admin' ? 'Administrador' : 'Usuário' }}</span
+        >
       </div>
       <div class="flex flex-row items-center justify-center w-fit gap-2">
         <ThemeToggle />

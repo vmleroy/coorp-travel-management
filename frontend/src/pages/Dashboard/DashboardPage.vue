@@ -12,7 +12,12 @@ const UserDashboard = defineAsyncComponent(() => import('./UserDashboard.vue'))
 <template>
   <AuthLayout>
     <div class="container mx-auto py-8 px-2 md:px-0">
-      <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+      <div class="w-fit mb-2">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <p class="text-lg font-light italic">
+          Bem-vindo, {{ authStore.user?.name }}
+        </p>
+      </div>
       <div v-if="authStore.isAdmin">
         <!-- Admin View -->
         <AdminDashboard />

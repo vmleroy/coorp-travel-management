@@ -4,6 +4,7 @@ import { setupAuthGuard } from './guards'
 import { LandingPage } from '@/pages/Landing'
 import { UserProfile } from '@/pages/UserProfile'
 import { DashboardPage } from '@/pages/Dashboard'
+import { UserManagementPage } from '@/pages/UserManagement'
 
 const routes = [
   {
@@ -22,6 +23,12 @@ const routes = [
     name: 'dashboard',
     component: DashboardPage,
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/users',
+    name: 'user-management',
+    component: UserManagementPage,
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
 ]
 
