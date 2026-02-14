@@ -9,6 +9,7 @@ import { router } from './router/router.ts'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import { VueQueryPlugin } from '@tanstack/vue-query'
+import ToastService from 'primevue/toastservice'
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 
@@ -35,6 +36,7 @@ app.use(PrimeVue, {
   },
 })
 
+app.use(ToastService)
 app.use(VueQueryPlugin)
 app.use(router)
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import { getUsers, createUser, updateUser, type User, type CreateUserPayload } from '@/api/user'
 import { getErrorMessage } from '@/utils/errorHandler'
 import { AuthLayout } from '@/components/layout/AuthenticatedLayout'
@@ -10,7 +11,9 @@ import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
 import Select from 'primevue/select'
+import Toast from 'primevue/toast'
 
+const toast = useToast()
 const users = ref<User[]>([])
 const loading = ref(false)
 const showCreateDialog = ref(false)
@@ -44,6 +47,12 @@ async function loadUsers() {
     users.value = await getUsers()
   } catch (e) {
     console.error('Erro ao carregar usuários:', e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível carregar os usuários',
+      life: 3000,
+    })
   } finally {
     loading.value = false
   }
@@ -61,9 +70,21 @@ async function submitCreate() {
       password: '',
       role: 'user',
     }
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Usuário criado com sucesso',
+      life: 3000,
+    })
     await loadUsers()
   } catch (e) {
     errorMessage.value = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: errorMessage.value,
+      life: 3000,
+    })
   } finally {
     creating.value = false
   }
@@ -87,9 +108,21 @@ async function submitEdit() {
     await updateUser(selectedUser.value.id, editForm.value)
     showEditDialog.value = false
     selectedUser.value = null
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Usuário atualizado com sucesso',
+      life: 3000,
+    })
     await loadUsers()
   } catch (e) {
     errorMessage.value = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: errorMessage.value,
+      life: 3000,
+    })
   } finally {
     updating.value = false
   }
@@ -110,6 +143,7 @@ onMounted(() => {
 
 <template>
   <AuthLayout>
+    <Toast />
     <div class="container mx-auto py-8 px-2 md:px-0">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Gestão de Usuários</h1>

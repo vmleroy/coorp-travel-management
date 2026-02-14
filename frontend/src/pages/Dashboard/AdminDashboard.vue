@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import { useTravelOrderStore } from '@/stores/travelOrderStore'
 import {
   createTravelOrder,
@@ -25,6 +26,7 @@ import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import Tag from 'primevue/tag'
+import Toast from 'primevue/toast'
 
 interface AdminTravelOrderForm {
   user_id: string | number
@@ -44,6 +46,7 @@ interface UserOption {
   email?: string
 }
 
+const toast = useToast()
 const travelOrderStore = useTravelOrderStore()
 
 const showCreateDialog = ref(false)
@@ -138,9 +141,21 @@ async function submitCreate() {
     form.value.destination = ''
     form.value.departure_date = null
     form.value.return_date = null
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Solicitação de viagem criada com sucesso',
+      life: 3000,
+    })
     applyFilters()
   } catch (e) {
     errorMessage.value = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: errorMessage.value,
+      life: 3000,
+    })
   } finally {
     creating.value = false
   }
@@ -149,9 +164,21 @@ async function submitCreate() {
 async function approveOrder(order: TravelOrder) {
   try {
     await changeTravelOrderStatus(order.id, 'approved')
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Solicitação aprovada com sucesso',
+      life: 3000,
+    })
     applyFilters()
   } catch (e) {
-    getErrorMessage(e)
+    const error = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: error,
+      life: 3000,
+    })
   }
 }
 
@@ -167,9 +194,21 @@ async function submitReject() {
   try {
     await changeTravelOrderStatus(rejectOrderId.value, 'rejected', rejectReason.value)
     showRejectDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Solicitação rejeitada com sucesso',
+      life: 3000,
+    })
     applyFilters()
   } catch (e) {
-    getErrorMessage(e)
+    const error = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: error,
+      life: 3000,
+    })
   } finally {
     rejecting.value = false
   }
@@ -178,15 +217,36 @@ async function submitReject() {
 async function cancelOrder(order: TravelOrder) {
   try {
     await cancelTravelOrder(order.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Solicitação cancelada com sucesso',
+      life: 3000,
+    })
     applyFilters()
   } catch (e) {
-    getErrorMessage(e)
+    const error = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: error,
+      life: 3000,
+    })
   }
 }
 
 async function fetchUsers() {
-  const { data } = await apiClient.get<{ data: { users: UserOption[] } }>('/auth/users')
-  userOptions.value = data.data.users
+  try {
+    const { data } = await apiClient.get<{ data: { users: UserOption[] } }>('/auth/users')
+    userOptions.value = data.data.users
+  } catch  {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível carregar os usuários',
+      life: 3000,
+    })
+  }
 }
 
 // Inicial
@@ -197,6 +257,7 @@ travelOrderStore.listenToAllOrderUpdates()
 
 <template>
   <div>
+    <Toast />
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-semibold">Todas as Solicitações de Viagem</h2>
       <Button
@@ -248,6 +309,17 @@ travelOrderStore.listenToAllOrderUpdates()
       class="shadow rounded-lg"
       responsiveLayout="scroll"
     >
+      <template #empty>
+        <div class="text-center py-8 text-gray-500">
+          Nenhuma solicitação de viagem encontrada
+        </div>
+      </template>
+      <template #loading>
+        <div class="text-center py-8">
+          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+          <p class="mt-2 text-gray-500">Carregando solicitações...</p>
+        </div>
+      </template>
       <Column header="Usuário">
         <template #body="{ data }">
           {{ data.user?.name || 'N/A' }}

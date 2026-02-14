@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import { useTravelOrderStore } from '@/stores/travelOrderStore'
 import {
   createTravelOrder,
-  cancelTravelOrder,
   type TravelOrder,
   type TravelOrderFilters,
+  deleteTravelOrder,
 } from '@/api/travelOrder'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import Button from 'primevue/button'
+import { Button } from '@/components/button'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
+import { Input } from '@/components/input'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import Tag from 'primevue/tag'
+import Toast from 'primevue/toast'
 import { getErrorMessage } from '@/utils/errorHandler'
 import {
   formatDateToString,
@@ -35,6 +37,7 @@ interface DateRange extends Array<Date | null> {
   1: Date | null
 }
 
+const toast = useToast()
 const travelOrderStore = useTravelOrderStore()
 
 const showCreateDialog = ref(false)
@@ -103,16 +106,30 @@ async function submitCreate() {
   try {
     await createTravelOrder({
       destination: form.value.destination,
-      departure_date: form.value.departure_date ? formatDateToString(form.value.departure_date) : undefined,
+      departure_date: form.value.departure_date
+        ? formatDateToString(form.value.departure_date)
+        : undefined,
       return_date: form.value.return_date ? formatDateToString(form.value.return_date) : undefined,
     })
     showCreateDialog.value = false
     form.value.destination = ''
     form.value.departure_date = null
     form.value.return_date = null
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Solicitação de viagem criada com sucesso',
+      life: 3000,
+    })
     applyFilters()
   } catch (e) {
     errorMessage.value = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: errorMessage.value,
+      life: 3000,
+    })
   } finally {
     creating.value = false
   }
@@ -120,10 +137,22 @@ async function submitCreate() {
 
 async function cancelOrder(order: TravelOrder) {
   try {
-    await cancelTravelOrder(order.id)
+    await deleteTravelOrder(order.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Solicitação deletada com sucesso',
+      life: 3000,
+    })
     applyFilters()
   } catch (e) {
-    getErrorMessage(e)
+    const error = getErrorMessage(e)
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: error,
+      life: 3000,
+    })
   }
 }
 
@@ -134,6 +163,7 @@ travelOrderStore.listenToUserOrderUpdates()
 
 <template>
   <div>
+    <Toast />
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-semibold">Minhas Solicitações de Viagem</h2>
       <Button
@@ -152,7 +182,7 @@ travelOrderStore.listenToUserOrderUpdates()
         placeholder="Status"
         class="w-36"
       />
-      <InputText v-model="destinationFilter" placeholder="Destino" class="w-48" />
+      <Input v-model="destinationFilter" placeholder="Destino" class="w-48" />
       <DatePicker
         v-model="departureDateRange"
         selectionMode="range"
@@ -177,6 +207,17 @@ travelOrderStore.listenToUserOrderUpdates()
       class="shadow rounded-lg"
       responsiveLayout="scroll"
     >
+      <template #empty>
+        <div class="text-center py-8 text-gray-500">
+          Nenhuma solicitação de viagem encontrada
+        </div>
+      </template>
+      <template #loading>
+        <div class="text-center py-8">
+          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+          <p class="mt-2 text-gray-500">Carregando solicitações...</p>
+        </div>
+      </template>
       <Column field="destination" header="Destino" />
       <Column field="departure_date" header="Partida">
         <template #body="{ data }">
@@ -217,7 +258,7 @@ travelOrderStore.listenToUserOrderUpdates()
       <form @submit.prevent="submitCreate">
         <div class="mb-4">
           <label class="block mb-1 font-medium">Destino</label>
-          <InputText v-model="form.destination" required class="w-full" />
+          <Input v-model="form.destination" required class="w-full" />
         </div>
         <div class="mb-4">
           <label class="block mb-1 font-medium">Data de Partida</label>
